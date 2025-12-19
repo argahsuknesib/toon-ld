@@ -124,7 +124,8 @@ let back = toon_to_jsonld(&toon)?;
 ```python
 import toon_ld
 
-toon_str = toon_ld.convert_jsonld_to_toon('{"name": "Alice"}')
+json_ld = '{"@context": {"foaf": "http://xmlns.com/foaf/0.1/"}, "foaf:name": "Alice"}'
+toon_str = toon_ld.convert_jsonld_to_toon(json_ld)
 json_str = toon_ld.convert_toon_to_jsonld(toon_str)
 ```
 
@@ -132,7 +133,8 @@ json_str = toon_ld.convert_toon_to_jsonld(toon_str)
 ```javascript
 import { convert_jsonld_to_toon, convert_toon_to_jsonld } from 'toon-ld';
 
-const toon = convert_jsonld_to_toon('{"name": "Alice"}');
+const jsonLd = '{"@context": {"foaf": "http://xmlns.com/foaf/0.1/"}, "foaf:name": "Alice"}';
+const toon = convert_jsonld_to_toon(jsonLd);
 const json = convert_toon_to_jsonld(toon);
 ```
  
