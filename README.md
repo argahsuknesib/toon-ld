@@ -213,15 +213,3 @@ cd toon-py && maturin build --release
 ## License
 
 MIT License - See [LICENSE](LICENSE) for details.
-
-## Citation
-
-If you use TOON-LD in your research, please cite:
-```bibtex
-@software{toon-ld,
-  title = {TOON-LD: Token-Oriented Object Notation for Linked Data},
-  author = {Bisen, Kushagra Singh},
-  year = {2025},
-  url = {https://github.com/argahsuknesib/toon-ld}
-}
-```
