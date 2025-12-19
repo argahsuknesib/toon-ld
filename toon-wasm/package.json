@@ -1,14 +1,14 @@
 {
   "name": "toon-ld",
-  "version": "0.1.1",
-  "description": "High-performance serializer/parser for TOON-LD (Token-Oriented Object Notation for Linked Data)",
+  "version": "0.1.2",
+  "description": "TOON-LD (Token-Oriented Object Notation for Linked Data)",
   "main": "toon_wasm.js",
   "types": "toon_wasm.d.ts",
   "module": "toon_wasm.js",
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "https://github.com/toon-ld/toon-ld"
+    "url": "https://github.com/argahsuknesib/toon-ld"
   },
   "keywords": [
     "toon",
@@ -20,12 +20,12 @@
     "webassembly",
     "rust"
   ],
-  "author": "TOON-LD Contributors",
+  "author": "Kush Bisen",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/toon-ld/toon-ld/issues"
+    "url": "https://github.com/argahsuknesib/toon-ld/issues"
   },
-  "homepage": "https://github.com/toon-ld/toon-ld#readme",
+  "homepage": "https://github.com/argahsuknesib/toon-ld#readme",
   "files": [
     "toon_wasm_bg.wasm",
     "toon_wasm_bg.wasm.d.ts",

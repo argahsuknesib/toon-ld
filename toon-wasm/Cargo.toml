@@ -5,6 +5,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 description = "WASM bindings for TOON-LD serializer/parser"
+readme = "README.md"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
