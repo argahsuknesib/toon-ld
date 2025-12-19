@@ -135,12 +135,7 @@ import { convert_jsonld_to_toon, convert_toon_to_jsonld } from 'toon-ld';
 const toon = convert_jsonld_to_toon('{"name": "Alice"}');
 const json = convert_toon_to_jsonld(toon);
 ```
-
-## Documentation
-
-- **[Full Specification](SPECIFICATION.md)** - Complete grammar, algorithms, and conformance requirements
-- **[W3C-Style Spec (Bikeshed)](https://kushbisen.github.io/toon-ld/)** - Rendered specification with examples
-- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute to the project
+ 
 
 ## Key Concepts
 
@@ -192,7 +187,6 @@ foaf:name: Alice
 - `toon-cli/` - Command-line tool
 - `toon-wasm/` - WebAssembly bindings (npm)
 - `toon-py/` - Python bindings (PyPI)
-- `spec/` - Bikeshed specification source
 
 ## Building from Source
 
