@@ -1,0 +1,19 @@
+[package]
+name = "toon-py"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Python bindings for TOON-LD serializer/parser"
+
+[lib]
+name = "toon_ld"
+crate-type = ["cdylib"]
+
+[dependencies]
+toon-core = { path = "../toon-core" }
+pyo3 = { version = "0.21", features = ["extension-module"] }
+serde_json.workspace = true
+
+[build-dependencies]
+pyo3-build-config = "0.21"

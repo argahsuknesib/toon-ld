@@ -1,0 +1,21 @@
+@context:
+  dc: "http://purl.org/dc/elements/1.1/"
+  foaf: "http://xmlns.com/foaf/0.1/"
+  schema: "http://schema.org/"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+@id: "http://example.org/dataset/employees"
+@type: "schema:Dataset"
+@graph[10]{@id,@type,foaf:age,foaf:mbox,foaf:name,schema:department,schema:jobTitle}:
+  "http://example.org/person/1", "foaf:Person", 32, alice@example.org, Alice Johnson, Engineering, Software Engineer
+  "http://example.org/person/2", "foaf:Person", 28, bob@example.org, Bob Smith, Product, Product Manager
+  "http://example.org/person/3", "foaf:Person", 45, carol@example.org, Carol Williams, Engineering, Engineering Director
+  "http://example.org/person/4", "foaf:Person", 35, david@example.org, David Brown, Analytics, Data Scientist
+  "http://example.org/person/5", "foaf:Person", 29, eva@example.org, Eva Martinez, Design, UX Designer
+  "http://example.org/person/6", "foaf:Person", 41, frank@example.org, Frank Lee, Engineering, DevOps Engineer
+  "http://example.org/person/7", "foaf:Person", 33, grace@example.org, Grace Kim, Engineering, QA Engineer
+  "http://example.org/person/8", "foaf:Person", 27, henry@example.org, Henry Chen, Engineering, Frontend Developer
+  "http://example.org/person/9", "foaf:Person", 38, ivy@example.org, Ivy Thompson, Documentation, Technical Writer
+  "http://example.org/person/10", "foaf:Person", 31, jack@example.org, Jack Wilson, Engineering, Backend Developer
+dc:created: 2024-01-15
+dc:description: A sample dataset containing employee information for benchmarking TOON-LD serialization
+dc:title: Employee Directory

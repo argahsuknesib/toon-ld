@@ -1,0 +1,28 @@
+[package]
+name = "toon-wasm"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "WASM bindings for TOON-LD serializer/parser"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+toon-core = { path = "../toon-core" }
+wasm-bindgen = "0.2"
+serde-wasm-bindgen = "0.6"
+serde_json.workspace = true
+js-sys = "0.3"
+console_error_panic_hook = { version = "0.1", optional = true }
+
+[dependencies.web-sys]
+version = "0.3"
+features = ["console"]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[features]
+default = ["console_error_panic_hook"]

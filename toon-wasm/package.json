@@ -1,0 +1,42 @@
+{
+  "name": "toon-ld",
+  "version": "0.1.0",
+  "description": "High-performance serializer/parser for TOON-LD (Token-Oriented Object Notation for Linked Data)",
+  "main": "toon_wasm.js",
+  "types": "toon_wasm.d.ts",
+  "module": "toon_wasm.js",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/toon-ld/toon-ld"
+  },
+  "keywords": [
+    "toon",
+    "json-ld",
+    "rdf",
+    "linked-data",
+    "serialization",
+    "wasm",
+    "webassembly",
+    "rust"
+  ],
+  "author": "TOON-LD Contributors",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/toon-ld/toon-ld/issues"
+  },
+  "homepage": "https://github.com/toon-ld/toon-ld#readme",
+  "files": [
+    "toon_wasm_bg.wasm",
+    "toon_wasm_bg.wasm.d.ts",
+    "toon_wasm.js",
+    "toon_wasm.d.ts",
+    "snippets/**/*"
+  ],
+  "exports": {
+    ".": {
+      "import": "./toon_wasm.js",
+      "types": "./toon_wasm.d.ts"
+    }
+  }
+}

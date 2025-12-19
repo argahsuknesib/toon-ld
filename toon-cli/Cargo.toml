@@ -1,0 +1,18 @@
+[package]
+name = "toon-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Command-line tool for TOON-LD format conversion"
+
+[[bin]]
+name = "toon-ld"
+path = "src/main.rs"
+
+[dependencies]
+toon-core = { path = "../toon-core" }
+clap.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+anyhow = "1.0"
