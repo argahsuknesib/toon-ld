@@ -53,3 +53,7 @@ htmlcov/
 
 # Bikeshed generated files
 /spec/index.html
+
+# Spec directory (not ready for public review yet)
+/spec/
+/SPECIFICATION.md

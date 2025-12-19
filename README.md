@@ -2,12 +2,15 @@
 
 **Token-Oriented Object Notation for Linked Data** — A compact RDF serialization format that achieves 40-60% token reduction compared to JSON-LD, making it ideal for LLM applications and bandwidth-constrained environments.
 
+TOON-LD extends TOON in the same way that JSON-LD extends JSON: **every valid TOON-LD document is also a valid TOON document**. Base TOON parsers can process TOON-LD without modification, while TOON-LD processors interpret `@-prefixed` keys according to JSON-LD semantics.
+
 ## Why TOON-LD?
 
 TOON-LD combines the semantic expressiveness of RDF/JSON-LD with radical token efficiency through tabular arrays. By eliminating repetitive keys and using CSV-like rows for uniform data, TOON-LD fits more information into LLM context windows while maintaining human readability.
 
 ## Features
 
+- **Pure TOON Extension**: Every TOON-LD document is valid TOON (like JSON-LD extends JSON)
 - **Tabular Arrays**: Serialize arrays of objects as CSV-like rows with shared headers
 - **40-60% Token Reduction**: Fewer tokens means lower costs and more data in context
 - **Full JSON-LD Compatibility**: Round-trip conversion without data loss
@@ -52,6 +55,24 @@ Real-world token savings across different dataset sizes:
 ```
 
 Notice how object keys appear once in the header instead of repeating for each object.
+
+## How TOON-LD Extends TOON
+
+Just as JSON-LD extends JSON by adding semantic meaning to certain key names (those starting with `@`), TOON-LD extends TOON the same way:
+
+- **No new syntax**: TOON-LD uses only standard TOON syntax (objects, arrays, tabular format)
+- **Semantic interpretation**: Keys like `@context`, `@id`, `@type` have special JSON-LD meaning
+- **Full compatibility**: Any TOON parser can parse TOON-LD documents
+- **Value nodes**: Language tags and datatypes use tabular format for efficiency
+
+Example value node with language tag:
+```
+title[2]{@value,@language}:
+  The Hobbit,en
+  Der Hobbit,de
+```
+
+This is standard TOON tabular syntax that base TOON parsers handle natively, while TOON-LD processors interpret it as JSON-LD value nodes.
 
 ## Installation
 
@@ -136,14 +157,25 @@ foaf:knows[3]{foaf:name,foaf:age,vcard:locality}:
 ```
 
 ### Value Nodes
-Compact notation for language tags and datatypes:
+Language tags and datatypes use standard TOON object or tabular syntax:
 ```
 @context:
   dc: http://purl.org/dc/terms/
   schema: http://schema.org/
   xsd: http://www.w3.org/2001/XMLSchema#
-dc:title: "Bonjour"@fr
-schema:datePublished: "2024-01-15"^^xsd:date
+dc:title:
+  @value: Bonjour
+  @language: fr
+schema:datePublished:
+  @value: "2024-01-15"
+  @type: xsd:date
+```
+
+Or using tabular format for multiple values:
+```
+dc:titles[2]{@value,@language}:
+  Bonjour,fr
+  Hello,en
 ```
 
 ### Context Support

@@ -406,8 +406,11 @@ mod tests {
 
         let toon = jsonld_to_toon(json).unwrap();
 
+        // Value nodes now use standard TOON object syntax
+        assert!(toon.contains("@value"));
         assert!(toon.contains("Bonjour"));
-        assert!(toon.contains("@fr"));
+        assert!(toon.contains("@language"));
+        assert!(toon.contains("fr"));
     }
 
     #[test]
@@ -421,7 +424,10 @@ mod tests {
 
         let toon = jsonld_to_toon(json).unwrap();
 
+        // Value nodes now use standard TOON object syntax
+        assert!(toon.contains("@value"));
         assert!(toon.contains("2024-01-15"));
+        assert!(toon.contains("@type"));
         assert!(toon.contains("xsd:date"));
     }
 
@@ -561,8 +567,13 @@ mod tests {
 
         let toon = jsonld_to_toon(json).unwrap();
 
+        // Value nodes now use standard TOON object syntax
+        assert!(toon.contains("@value"));
         assert!(toon.contains("مرحبا"));
-        assert!(toon.contains("@ar:rtl") || toon.contains("@ar"));
+        assert!(toon.contains("@language"));
+        assert!(toon.contains("ar"));
+        assert!(toon.contains("@direction"));
+        assert!(toon.contains("rtl"));
     }
 
     #[test]

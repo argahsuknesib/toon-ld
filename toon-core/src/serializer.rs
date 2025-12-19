@@ -28,7 +28,7 @@ const MAX_INLINE_ARRAY_LENGTH: usize = 60;
 /// - Tabular arrays (arrays of objects with union-of-keys)
 /// - Primitive arrays (inline or multi-line)
 /// - JSON-LD keywords and context-based URI compaction
-/// - Value nodes with language tags and datatypes
+/// - Value nodes with language tags and datatypes (using standard TOON object syntax)
 ///
 /// # Example
 ///
@@ -281,11 +281,6 @@ impl ToonSerializer {
     ) -> Result<()> {
         let indent = self.make_indent(depth);
 
-        // Check if this is a @value node - handle it specially upfront
-        if obj.contains_key(JSONLD_VALUE) {
-            return self.serialize_value_node(obj, depth, output);
-        }
-
         // Sort keys by keyword order, then alphabetically
         let mut keys: Vec<&String> = obj.keys().collect();
         keys.sort_by(|a, b| {
@@ -333,10 +328,26 @@ impl ToonSerializer {
                 self.serialize_value(value, depth, output)?;
                 output.push('\n');
             }
-            // @id and @type use shorthand for primitives, but arrays need proper handling
-            JSONLD_ID | JSONLD_TYPE => match value {
+            // @id uses simple serialization
+            JSONLD_ID => match value {
                 Value::Array(arr) => {
                     self.serialize_keyed_array(&display_key, arr, depth, output)?;
+                }
+                _ => {
+                    output.push_str(&format!("{}{}: ", indent, display_key));
+                    self.serialize_value(value, depth, output)?;
+                    output.push('\n');
+                }
+            },
+            // @type values should be compacted with context
+            JSONLD_TYPE => match value {
+                Value::Array(arr) => {
+                    self.serialize_keyed_array(&display_key, arr, depth, output)?;
+                }
+                Value::String(s) => {
+                    // Compact the type URI using context
+                    let compact_type = self.context.compact_uri(s);
+                    output.push_str(&format!("{}{}: {}\n", indent, display_key, compact_type));
                 }
                 _ => {
                     output.push_str(&format!("{}{}: ", indent, display_key));
@@ -363,8 +374,13 @@ impl ToonSerializer {
                     self.serialize_keyed_array(TOON_SET, arr, depth, output)?;
                 }
             }
-            // @value node - already handled above
-            JSONLD_VALUE => {}
+            // @value, @language - serialize as normal keys (value nodes use standard TOON object syntax)
+            // Note: @type is handled above as it can be either a node type or a value node datatype
+            JSONLD_VALUE | JSONLD_LANGUAGE => {
+                output.push_str(&format!("{}{}: ", indent, display_key));
+                self.serialize_value(value, depth, output)?;
+                output.push('\n');
+            }
             // @included contains an array of included nodes
             JSONLD_INCLUDED => {
                 if let Value::Array(arr) = value {
@@ -479,49 +495,6 @@ impl ToonSerializer {
         } else {
             self.context.compact_uri(key)
         }
-    }
-
-    /// Serialize a @value node in compact form: "value"@lang or "value"^^type
-    fn serialize_value_node(
-        &self,
-        obj: &Map<String, Value>,
-        depth: usize,
-        output: &mut String,
-    ) -> Result<()> {
-        let indent = self.make_indent(depth);
-
-        let value = obj.get(JSONLD_VALUE);
-        let language = obj.get(JSONLD_LANGUAGE);
-        let type_val = obj.get(JSONLD_TYPE);
-        let direction = obj.get(JSONLD_DIRECTION);
-
-        if let Some(val) = value {
-            let val_str = match val {
-                Value::String(s) => self.quote_if_needed(s),
-                _ => self.value_to_csv_cell(val),
-            };
-
-            if let Some(Value::String(lang)) = language {
-                // Language-tagged string: "value"@lang or "value"@lang:dir
-                if let Some(Value::String(dir)) = direction {
-                    output.push_str(&format!("{}{}@{}:{}\n", indent, val_str, lang, dir));
-                } else {
-                    output.push_str(&format!("{}{}@{}\n", indent, val_str, lang));
-                }
-            } else if let Some(Value::String(typ)) = type_val {
-                // Typed literal: "value"^^type
-                let compact_type = self.context.compact_uri(typ);
-                output.push_str(&format!("{}{}^^{}\n", indent, val_str, compact_type));
-            } else if let Some(Value::String(dir)) = direction {
-                // Value with direction only: "value"^dir
-                output.push_str(&format!("{}{}^{}\n", indent, val_str, dir));
-            } else {
-                // Just @value without @language or @type
-                output.push_str(&format!("{}{}\n", indent, val_str));
-            }
-        }
-
-        Ok(())
     }
 
     /// Serialize @context in a compact format.
@@ -900,8 +873,11 @@ mod tests {
         });
 
         let toon = serializer.serialize(&value).unwrap();
+        // Value nodes now use standard TOON object syntax
+        assert!(toon.contains("@value"));
         assert!(toon.contains("Bonjour"));
-        assert!(toon.contains("@fr"));
+        assert!(toon.contains("@language"));
+        assert!(toon.contains("fr"));
     }
 
     #[test]
@@ -919,8 +895,11 @@ mod tests {
         });
 
         let toon = serializer.serialize(&value).unwrap();
+        // Value nodes now use standard TOON object syntax
+        assert!(toon.contains("@value"));
         assert!(toon.contains("2024-01-15"));
-        assert!(toon.contains("^^xsd:date"));
+        assert!(toon.contains("@type"));
+        assert!(toon.contains("xsd:date"));
     }
 
     #[test]
