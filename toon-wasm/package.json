@@ -1,6 +1,6 @@
 {
   "name": "toon-ld",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "High-performance serializer/parser for TOON-LD (Token-Oriented Object Notation for Linked Data)",
   "main": "toon_wasm.js",
   "types": "toon_wasm.d.ts",

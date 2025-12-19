@@ -1,5 +1,9 @@
 # TOON-LD
 
+[![npm](https://img.shields.io/npm/v/toon-ld)](https://www.npmjs.com/package/toon-ld)
+[![PyPI](https://img.shields.io/pypi/v/toon-ld)](https://pypi.org/project/toon-ld/)
+[![Crates.io](https://img.shields.io/crates/v/toon-ld)](https://crates.io/crates/toon-ld)
+
 **Token-Oriented Object Notation for Linked Data** — A compact RDF serialization format that achieves 40-60% token reduction compared to JSON-LD, making it ideal for LLM applications and bandwidth-constrained environments.
 
 TOON-LD extends TOON in the same way that JSON-LD extends JSON: **every valid TOON-LD document is also a valid TOON document**. Base TOON parsers can process TOON-LD without modification, while TOON-LD processors interpret `@-prefixed` keys according to JSON-LD semantics.
@@ -79,7 +83,7 @@ This is standard TOON tabular syntax that base TOON parsers handle natively, whi
 ### Rust
 ```toml
 [dependencies]
-toon-core = "0.1"
+toon-ld = "0.1"
 ```
 
 ### CLI
@@ -113,7 +117,7 @@ toon-ld benchmark --max-records 10000
 
 ### Rust
 ```rust
-use toon_core::{jsonld_to_toon, toon_to_jsonld};
+use toon_ld::{jsonld_to_toon, toon_to_jsonld};
 
 let json_ld = r#"{"@context": {"foaf": "http://xmlns.com/foaf/0.1/"}, "foaf:name": "Alice"}"#;
 let toon = jsonld_to_toon(json_ld)?;

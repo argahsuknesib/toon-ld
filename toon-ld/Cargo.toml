@@ -1,0 +1,21 @@
+[package]
+name = "toon-ld"
+version = "0.1.0"
+edition = "2021"
+authors = ["Kush Bisen"]
+license = "MIT"
+repository = "https://github.com/argahsuknesib/toon-ld"
+description = "Token-Oriented Object Notation for Linked Data - A compact RDF serialization format"
+readme = "README.md"
+keywords = ["toon", "json-ld", "rdf", "linked-data", "serialization"]
+categories = ["encoding", "parser-implementations", "wasm"]
+
+[dependencies]
+toon-core = { path = "../toon-core", version = "0.1" }
+
+# Re-export all dependencies that are part of the public API
+serde = "1.0"
+serde_json = "1.0"
+
+[dev-dependencies]
+pretty_assertions = "1.4"
