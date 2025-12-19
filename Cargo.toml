@@ -3,7 +3,7 @@ resolver = "2"
 members = [
     "toon-core",
     "toon-wasm",
-    "toon-py",
+    # "toon-py",  # Temporarily disabled: PyO3 0.21.2 doesn't support Python 3.14 yet
     "toon-cli",
 ]
 

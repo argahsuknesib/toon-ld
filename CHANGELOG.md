@@ -11,6 +11,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional JSON-LD 1.1 keyword support (planned)
 - Streaming parser support (planned)
 
+## [0.2.0] - 2025-01-16
+
+### BREAKING CHANGES
+
+This release redesigns TOON-LD to properly extend TOON in the same way that JSON-LD extends JSON. **Every valid TOON-LD document is now also a valid TOON document**, ensuring full compatibility with base TOON parsers.
+
+#### Removed
+- **Compact value node syntax** (`"value"@lang` and `"value"^^type`) - This syntax was NOT valid TOON and broke the extension relationship
+- Special parsing for `@` language tag suffixes
+- Special parsing for `^^` datatype annotations
+- `value-node` production from EBNF grammar
+
+#### Changed
+- **Value nodes now use standard TOON object syntax:**
+  - Language-tagged strings: `@value: <string>` + `@language: <lang>` as object fields
+  - Typed literals: `@value: <string>` + `@type: <datatype>` as object fields
+- **Value node arrays use tabular format for token efficiency:**
+  - `titles[N]{@value,@language}:` with CSV-like rows
+  - Achieves same or better token reduction while maintaining TOON compatibility
+- Updated specification to emphasize TOON compatibility as primary design goal
+- All JSON-LD keywords (`@context`, `@id`, `@type`, etc.) now treated as regular keys by TOON parsers, with semantic interpretation added by TOON-LD processors
+
+#### Added
+- **TOON_COMPATIBILITY.md** - Comprehensive documentation of extension relationship
+- **MIGRATION.md** - Guide for migrating from previous incompatible syntax
+- **CHANGES_SUMMARY.md** - Complete summary of redesign
+- Section 1.2 "Relationship to TOON" in specification
+- Section 15.1 "TOON Compatibility Requirements" in specification
+- Conformance testing requirements for TOON parser compatibility
+
+#### Fixed
+- Extension relationship now matches JSON-LD → JSON pattern
+- All serialized output is guaranteed to be valid TOON
+- No syntax conflicts with base TOON specification
+- Grammar no longer includes non-TOON constructs
+
 ## [0.1.0] - 2025-01-15
 
 ### Added
@@ -32,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `@list` - Ordered collections
   - `@set` - Unordered collections
   - `@reverse` - Reverse properties
-- Compact value node notation (`"value"@lang` and `"value"^^type`)
+
 - Smart quoting (only quote strings containing special characters)
 - Comprehensive test suite (20+ unit tests)
 

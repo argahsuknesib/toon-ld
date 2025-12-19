@@ -3,249 +3,14 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to release (without v prefix)'
-        required: true
-        type: string
+      - "v*"
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  validate:
-    name: Validate Release
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Determine version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-action@stable
-
-      - name: Verify tests pass
-        run: cargo test --workspace
-
-  publish-crates:
-    name: Publish to crates.io
-    needs: validate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-action@stable
-
-      - name: Publish toon-core
-        run: cargo publish -p toon-core --token ${{ secrets.CRATES_IO_TOKEN }}
-        continue-on-error: false
-
-      - name: Wait for crates.io index update
-        run: sleep 30
-
-      - name: Publish toon-cli
-        run: cargo publish -p toon-cli --token ${{ secrets.CRATES_IO_TOKEN }}
-        continue-on-error: false
-
-  publish-npm:
-    name: Publish to npm
-    needs: validate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-action@stable
-        with:
-          targets: wasm32-unknown-unknown
-
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Build WASM package
-        working-directory: toon-wasm
-        run: wasm-pack build --target web --scope toon-ld
-
-      - name: Update package.json version
-        working-directory: toon-wasm/pkg
-        run: |
-          npm version ${{ needs.validate.outputs.version }} --no-git-tag-version --allow-same-version
-
-      - name: Publish to npm
-        working-directory: toon-wasm/pkg
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-  publish-pypi:
-    name: Publish to PyPI
-    needs: validate
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-          - os: macos-latest
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            target: aarch64-apple-darwin
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-action@stable
-        with:
-          targets: ${{ matrix.target }}
-
-      - name: Install maturin
-        run: pip install maturin twine
-
-      - name: Build wheel (Linux)
-        if: runner.os == 'Linux'
-        working-directory: toon-py
-        run: |
-          pip install patchelf
-          maturin build --release --target ${{ matrix.target }} --manylinux 2014
-
-      - name: Build wheel (macOS/Windows)
-        if: runner.os != 'Linux'
-        working-directory: toon-py
-        run: maturin build --release --target ${{ matrix.target }}
-
-      - name: Upload wheel artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheel-${{ matrix.target }}
-          path: toon-py/target/wheels/*.whl
-
-  upload-pypi:
-    name: Upload to PyPI
-    needs: [validate, publish-pypi]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all wheel artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: wheels
-          pattern: wheel-*
-          merge-multiple: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install twine
-        run: pip install twine
-
-      - name: Upload to PyPI
-        run: twine upload wheels/*.whl
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-
-  build-binaries:
-    name: Build Release Binaries
-    needs: validate
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            artifact: toon-ld-linux-x86_64
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            artifact: toon-ld-linux-x86_64-musl
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            artifact: toon-ld-darwin-x86_64
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            artifact: toon-ld-darwin-arm64
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            artifact: toon-ld-windows-x86_64
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-action@stable
-        with:
-          targets: ${{ matrix.target }}
-
-      - name: Install musl tools (Linux musl)
-        if: matrix.target == 'x86_64-unknown-linux-musl'
-        run: sudo apt-get update && sudo apt-get install -y musl-tools
-
-      - name: Build CLI binary
-        run: cargo build --release --target ${{ matrix.target }} -p toon-cli
-
-      - name: Package binary (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          mkdir -p dist
-          cp target/${{ matrix.target }}/release/toon-ld dist/
-          cd dist
-          tar -czvf ${{ matrix.artifact }}.tar.gz toon-ld
-          rm toon-ld
-
-      - name: Package binary (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          mkdir dist
-          copy target/${{ matrix.target }}/release/toon-ld.exe dist/
-          cd dist
-          Compress-Archive -Path toon-ld.exe -DestinationPath ${{ matrix.artifact }}.zip
-          Remove-Item toon-ld.exe
-
-      - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact }}
-          path: dist/*
-
-  github-release:
+  create-release:
     name: Create GitHub Release
-    needs: [validate, publish-crates, publish-npm, upload-pypi, build-binaries]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -253,50 +18,46 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download all binary artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          pattern: toon-ld-*
-          merge-multiple: true
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      - name: Generate changelog
-        id: changelog
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run tests
+        run: cargo test --workspace
+
+      - name: Build release binary
+        run: cargo build --release -p toon-cli
+
+      - name: Create release archive
         run: |
-          echo "## Changes in v${{ needs.validate.outputs.version }}" > RELEASE_NOTES.md
+          mkdir -p dist
+          cp target/release/toon-ld dist/
+          cd dist
+          tar -czvf toon-ld-${{ steps.version.outputs.version }}.tar.gz toon-ld
+
+      - name: Generate release notes
+        run: |
+          echo "## TOON-LD v${{ steps.version.outputs.version }}" > RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
           echo "### Installation" >> RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
-          echo "**Rust:**" >> RELEASE_NOTES.md
+          echo "Download the binary for your platform from the assets below." >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "Or install via cargo:" >> RELEASE_NOTES.md
           echo '```bash' >> RELEASE_NOTES.md
           echo "cargo install toon-cli" >> RELEASE_NOTES.md
           echo '```' >> RELEASE_NOTES.md
-          echo "" >> RELEASE_NOTES.md
-          echo "**Python:**" >> RELEASE_NOTES.md
-          echo '```bash' >> RELEASE_NOTES.md
-          echo "pip install toon-ld" >> RELEASE_NOTES.md
-          echo '```' >> RELEASE_NOTES.md
-          echo "" >> RELEASE_NOTES.md
-          echo "**JavaScript/TypeScript:**" >> RELEASE_NOTES.md
-          echo '```bash' >> RELEASE_NOTES.md
-          echo "npm install @toon-ld/toon-ld" >> RELEASE_NOTES.md
-          echo '```' >> RELEASE_NOTES.md
-          echo "" >> RELEASE_NOTES.md
-          echo "### Checksums" >> RELEASE_NOTES.md
-          echo "" >> RELEASE_NOTES.md
-          echo '```' >> RELEASE_NOTES.md
-          cd artifacts
-          sha256sum * >> ../RELEASE_NOTES.md
-          echo '```' >> ../RELEASE_NOTES.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ needs.validate.outputs.version }}
-          name: Release v${{ needs.validate.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
           body_path: RELEASE_NOTES.md
           draft: false
-          prerelease: ${{ contains(needs.validate.outputs.version, '-') }}
-          files: artifacts/*
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+          files: dist/*.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

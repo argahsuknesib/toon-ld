@@ -495,7 +495,7 @@ mod tests {
         let toon = r#"
 name: Alice
 age: 30
-score: 3.14
+score: 3.15
 active: true
 disabled: false
 nothing: null
@@ -504,7 +504,7 @@ nothing: null
         let value = parser.parse(toon).unwrap();
         assert_eq!(value.get("name").unwrap(), "Alice");
         assert_eq!(value.get("age").unwrap(), 30);
-        assert_eq!(value.get("score").unwrap(), 3.14);
+        assert_eq!(value.get("score").unwrap(), 3.15);
         assert_eq!(value.get("active").unwrap(), true);
         assert_eq!(value.get("disabled").unwrap(), false);
         assert!(value.get("nothing").unwrap().is_null());
