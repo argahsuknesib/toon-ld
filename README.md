@@ -126,7 +126,10 @@ const json = convert_toon_to_jsonld(toon);
 ### Tabular Arrays
 Arrays of objects share a header with field names, followed by CSV-like rows:
 ```
-people[3]{name,age,city}:
+@context:
+  foaf: http://xmlns.com/foaf/0.1/
+  vcard: http://www.w3.org/2006/vcard/ns#
+foaf:knows[3]{foaf:name,foaf:age,vcard:locality}:
   Alice, 30, null
   Bob, null, Portland
   Carol, 28, Seattle
@@ -135,8 +138,12 @@ people[3]{name,age,city}:
 ### Value Nodes
 Compact notation for language tags and datatypes:
 ```
-title: "Bonjour"@fr
-date: "2024-01-15"^^xsd:date
+@context:
+  dc: http://purl.org/dc/terms/
+  schema: http://schema.org/
+  xsd: http://www.w3.org/2001/XMLSchema#
+dc:title: "Bonjour"@fr
+schema:datePublished: "2024-01-15"^^xsd:date
 ```
 
 ### Context Support
@@ -181,7 +188,7 @@ If you use TOON-LD in your research, please cite:
 ```bibtex
 @software{toon-ld,
   title = {TOON-LD: Token-Oriented Object Notation for Linked Data},
-  author = {Bisen, Kush},
+  author = {Bisen, Kushagra Singh},
   year = {2025},
   url = {https://github.com/argahsuknesib/toon-ld}
 }
