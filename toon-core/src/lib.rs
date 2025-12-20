@@ -19,7 +19,7 @@
 //! # Example
 //!
 //! ```
-//! use toon_core::{jsonld_to_toon, toon_to_jsonld};
+//! use toon_core::{jsonld_to_toonld, toonld_to_jsonld};
 //!
 //! let json_ld = r#"{
 //!     "@context": {"foaf": "http://xmlns.com/foaf/0.1/"},
@@ -28,11 +28,11 @@
 //! }"#;
 //!
 //! // Convert JSON-LD to TOON-LD
-//! let toon = jsonld_to_toon(json_ld).unwrap();
+//! let toon = jsonld_to_toonld(json_ld).unwrap();
 //! assert!(toon.contains("foaf:name: Alice"));
 //!
 //! // Convert back to JSON-LD
-//! let back = toon_to_jsonld(&toon).unwrap();
+//! let back = toonld_to_jsonld(&toon).unwrap();
 //! ```
 //!
 //! # Modules
@@ -74,13 +74,13 @@ use serde_json::Value;
 /// # Example
 ///
 /// ```
-/// use toon_core::jsonld_to_toon;
+/// use toon_core::jsonld_to_toonld;
 ///
 /// let json_ld = r#"{"name": "Alice", "age": 30}"#;
-/// let toon = jsonld_to_toon(json_ld).unwrap();
+/// let toon = jsonld_to_toonld(json_ld).unwrap();
 /// assert!(toon.contains("name: Alice"));
 /// ```
-pub fn jsonld_to_toon(json: &str) -> Result<String> {
+pub fn jsonld_to_toonld(json: &str) -> Result<String> {
     let value: Value = serde_json::from_str(json)?;
     let context = JsonLdContext::from_value(&value);
     let serializer = ToonSerializer::new().with_context(context);
@@ -102,13 +102,13 @@ pub fn jsonld_to_toon(json: &str) -> Result<String> {
 /// # Example
 ///
 /// ```
-/// use toon_core::toon_to_jsonld;
+/// use toon_core::toonld_to_jsonld;
 ///
 /// let toon = "name: Alice\nage: 30";
-/// let json = toon_to_jsonld(toon).unwrap();
+/// let json = toonld_to_jsonld(toon).unwrap();
 /// assert!(json.contains("\"name\""));
 /// ```
-pub fn toon_to_jsonld(toon: &str) -> Result<String> {
+pub fn toonld_to_jsonld(toon: &str) -> Result<String> {
     let parser = ToonParser::new();
     parser.parse_to_json(toon)
 }
@@ -178,8 +178,8 @@ mod tests {
             "active": true
         }"#;
 
-        let toon = jsonld_to_toon(original).unwrap();
-        let back_json = toon_to_jsonld(&toon).unwrap();
+        let toon = jsonld_to_toonld(original).unwrap();
+        let back_json = toonld_to_jsonld(&toon).unwrap();
         let back: Value = serde_json::from_str(&back_json).unwrap();
 
         assert_eq!(back.get("count").unwrap(), 2);
@@ -195,7 +195,7 @@ mod tests {
             "http://xmlns.com/foaf/0.1/name": "Alice"
         }"#;
 
-        let toon = jsonld_to_toon(json).unwrap();
+        let toon = jsonld_to_toonld(json).unwrap();
         assert!(toon.contains("foaf:name"));
     }
 
@@ -380,7 +380,7 @@ mod tests {
             ]
         }"#;
 
-        let toon = jsonld_to_toon(json).unwrap();
+        let toon = jsonld_to_toonld(json).unwrap();
 
         // Context should come first
         assert!(toon.starts_with("@context:"));
@@ -390,7 +390,7 @@ mod tests {
         assert!(toon.contains("@graph[2]"));
 
         // Roundtrip
-        let back_json = toon_to_jsonld(&toon).unwrap();
+        let back_json = toonld_to_jsonld(&toon).unwrap();
         let back: Value = serde_json::from_str(&back_json).unwrap();
 
         assert_eq!(back.get("@id").unwrap(), "http://example.org/dataset");
@@ -404,7 +404,7 @@ mod tests {
             "title": {"@value": "Bonjour", "@language": "fr"}
         }"#;
 
-        let toon = jsonld_to_toon(json).unwrap();
+        let toon = jsonld_to_toonld(json).unwrap();
 
         // Value nodes now use standard TOON object syntax
         assert!(toon.contains("@value"));
@@ -422,7 +422,7 @@ mod tests {
             "date": {"@value": "2024-01-15", "@type": "http://www.w3.org/2001/XMLSchema#date"}
         }"#;
 
-        let toon = jsonld_to_toon(json).unwrap();
+        let toon = jsonld_to_toonld(json).unwrap();
 
         // Value nodes now use standard TOON object syntax
         assert!(toon.contains("@value"));
@@ -565,7 +565,7 @@ mod tests {
             "title": {"@value": "مرحبا", "@language": "ar", "@direction": "rtl"}
         }"#;
 
-        let toon = jsonld_to_toon(json).unwrap();
+        let toon = jsonld_to_toonld(json).unwrap();
 
         // Value nodes now use standard TOON object syntax
         assert!(toon.contains("@value"));
@@ -833,14 +833,14 @@ mod tests {
             "knows": "http://example.org/bob"
         }"#;
 
-        let toon = jsonld_to_toon(json).unwrap();
+        let toon = jsonld_to_toonld(json).unwrap();
 
         assert!(toon.contains("@context"));
         assert!(toon.contains("@version"));
         assert!(toon.contains("name"));
         assert!(toon.contains("knows"));
 
-        let back_json = toon_to_jsonld(&toon).unwrap();
+        let back_json = toonld_to_jsonld(&toon).unwrap();
         let back: Value = serde_json::from_str(&back_json).unwrap();
         assert!(back.get("@context").is_some());
     }
@@ -868,7 +868,7 @@ mod tests {
             ]
         }"#;
 
-        let toon = jsonld_to_toon(json).unwrap();
+        let toon = jsonld_to_toonld(json).unwrap();
 
         assert!(toon.contains("@context"));
         assert!(toon.contains("@version"));
@@ -882,7 +882,7 @@ mod tests {
         assert!(toon.contains("Alice"));
         assert!(toon.contains("Bob"));
 
-        let back_json = toon_to_jsonld(&toon).unwrap();
+        let back_json = toonld_to_jsonld(&toon).unwrap();
         let back: Value = serde_json::from_str(&back_json).unwrap();
         assert!(back.get("@context").is_some());
         assert!(back.get("@included").is_some());

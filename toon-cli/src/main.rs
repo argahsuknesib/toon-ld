@@ -181,10 +181,10 @@ fn cmd_convert(
 
     let result = match (source_format, target_format) {
         (Format::JsonLd, Format::ToonLd) => {
-            toon_core::jsonld_to_toon(&content).context("Failed to convert JSON-LD to TOON-LD")?
+            toon_core::jsonld_to_toonld(&content).context("Failed to convert JSON-LD to TOON-LD")?
         }
         (Format::ToonLd, Format::JsonLd) => {
-            let json = toon_core::toon_to_jsonld(&content)
+            let json = toon_core::toonld_to_jsonld(&content)
                 .context("Failed to convert TOON-LD to JSON-LD")?;
             if pretty {
                 let value: serde_json::Value = serde_json::from_str(&json)?;
@@ -205,8 +205,8 @@ fn cmd_convert(
         }
         (Format::ToonLd, Format::ToonLd) => {
             // Validate by parsing and re-serializing
-            let json = toon_core::toon_to_jsonld(&content).context("Failed to parse TOON-LD")?;
-            toon_core::jsonld_to_toon(&json).context("Failed to re-serialize TOON-LD")?
+            let json = toon_core::toonld_to_jsonld(&content).context("Failed to parse TOON-LD")?;
+            toon_core::jsonld_to_toonld(&json).context("Failed to re-serialize TOON-LD")?
         }
     };
 
@@ -307,7 +307,7 @@ fn cmd_stats(input: Option<PathBuf>, format: Option<Format>, show_tokens: bool) 
     let (jsonld, toonld) = match source_format {
         Format::JsonLd => {
             let toon =
-                toon_core::jsonld_to_toon(&content).context("Failed to convert to TOON-LD")?;
+                toon_core::jsonld_to_toonld(&content).context("Failed to convert to TOON-LD")?;
             // Normalize JSON for fair comparison
             let value: serde_json::Value = serde_json::from_str(&content)?;
             let normalized = serde_json::to_string(&value)?;
@@ -315,7 +315,7 @@ fn cmd_stats(input: Option<PathBuf>, format: Option<Format>, show_tokens: bool) 
         }
         Format::ToonLd => {
             let json =
-                toon_core::toon_to_jsonld(&content).context("Failed to convert to JSON-LD")?;
+                toon_core::toonld_to_jsonld(&content).context("Failed to convert to JSON-LD")?;
             let value: serde_json::Value = serde_json::from_str(&json)?;
             let normalized = serde_json::to_string(&value)?;
             (normalized, content)
@@ -425,7 +425,7 @@ fn cmd_benchmark(input: Option<PathBuf>, max_records: usize) -> Result<()> {
             generate_sample_jsonld(num_records)
         };
 
-        let toonld = toon_core::jsonld_to_toon(&jsonld).context("Failed to convert to TOON-LD")?;
+        let toonld = toon_core::jsonld_to_toonld(&jsonld).context("Failed to convert to TOON-LD")?;
 
         // Normalize JSON for fair comparison
         let value: serde_json::Value = serde_json::from_str(&jsonld)?;

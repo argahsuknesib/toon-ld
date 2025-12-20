@@ -23,14 +23,14 @@ import toon_ld
 
 # Convert JSON-LD to TOON-LD
 json_str = '{"name": "Alice", "age": 30}'
-toon_str = toon_ld.convert_jsonld_to_toon(json_str)
+toon_str = toon_ld.convert_jsonld_to_toonld(json_str)
 print(toon_str)
 # Output:
 # age: 30
 # name: Alice
 
 # Convert TOON-LD back to JSON-LD
-json_back = toon_ld.convert_toon_to_jsonld(toon_str)
+json_back = toon_ld.convert_toonld_to_jsonld(toon_str)
 print(json_back)
 ```
 
@@ -74,7 +74,7 @@ if toon_ld.validate_json('{"name": "Alice"}'):
 
 ## API Reference
 
-### `convert_jsonld_to_toon(json_str: str) -> str`
+### `convert_jsonld_to_toonld(json_str: str) -> str`
 
 Convert a JSON-LD string to TOON-LD format.
 
@@ -85,7 +85,7 @@ Convert a JSON-LD string to TOON-LD format.
 
 **Raises:** `ValueError` if the input is not valid JSON
 
-### `convert_toon_to_jsonld(toon_str: str) -> str`
+### `convert_toonld_to_jsonld(toon_str: str) -> str`
 
 Convert a TOON-LD string to JSON-LD format.
 

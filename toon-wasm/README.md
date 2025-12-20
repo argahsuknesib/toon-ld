@@ -13,7 +13,7 @@ TOON-LD extends TOON in the same way that JSON-LD extends JSON: **every valid TO
 - **Full JSON-LD Compatibility**: Round-trip conversion without data loss
 - **Tabular Arrays**: Serialize arrays of objects as CSV-like rows with shared headers
 - **All JSON-LD 1.1 Keywords**: Complete support for `@context`, `@graph`, `@id`, `@type`, value nodes, etc.
-- **WebAssembly Performance**: Compiled from Rust for near-native speed
+- **WebAssembly Performance**: Compiled from Rust for high-performance parsing and serialization
 - **TypeScript Support**: Fully typed API with excellent IDE support
 - **Browser & Node.js**: Works in both environments
 
@@ -32,7 +32,7 @@ yarn add toon-ld
 ## Quick Start
 
 ```javascript
-import { convert_jsonld_to_toon, convert_toon_to_jsonld } from 'toon-ld';
+import { convert_jsonld_to_toonld, convert_toonld_to_jsonld } from 'toon-ld';
 
 // Convert JSON-LD to TOON-LD
 const jsonLd = JSON.stringify({
@@ -41,7 +41,7 @@ const jsonLd = JSON.stringify({
   "foaf:age": 30
 });
 
-const toon = convert_jsonld_to_toon(jsonLd);
+const toon = convert_jsonld_to_toonld(jsonLd);
 console.log(toon);
 // Output:
 // @context:
@@ -50,7 +50,7 @@ console.log(toon);
 // foaf:age: 30
 
 // Convert back to JSON-LD
-const backToJson = convert_toon_to_jsonld(toon);
+const backToJson = convert_toonld_to_jsonld(toon);
 const parsed = JSON.parse(backToJson);
 console.log(parsed);
 ```
@@ -85,7 +85,7 @@ Notice how object keys appear once in the header instead of repeating for each o
 
 ## API Reference
 
-### `convert_jsonld_to_toon(json: string): string`
+### `convert_jsonld_to_toonld(json: string): string`
 
 Convert a JSON-LD string to TOON-LD format.
 
@@ -101,10 +101,10 @@ Convert a JSON-LD string to TOON-LD format.
 **Example:**
 ```javascript
 const jsonLd = '{"@context": {"foaf": "http://xmlns.com/foaf/0.1/"}, "foaf:name": "Alice"}';
-const toon = convert_jsonld_to_toon(jsonLd);
+const toon = convert_jsonld_to_toonld(jsonLd);
 ```
 
-### `convert_toon_to_jsonld(toon: string): string`
+### `convert_toonld_to_jsonld(toon: string): string`
 
 Convert a TOON-LD string to JSON-LD format.
 
@@ -122,7 +122,7 @@ Convert a TOON-LD string to JSON-LD format.
 const toon = `@context:
   foaf: http://xmlns.com/foaf/0.1/
 foaf:name: Alice`;
-const jsonLd = convert_toon_to_jsonld(toon);
+const jsonLd = convert_toonld_to_jsonld(toon);
 ```
 
 ### `validate_json(json: string): boolean`
@@ -174,14 +174,14 @@ This package includes TypeScript type definitions out of the box:
 
 ```typescript
 import { 
-  convert_jsonld_to_toon, 
-  convert_toon_to_jsonld,
+  convert_jsonld_to_toonld, 
+  convert_toonld_to_jsonld,
   validate_json,
   validate_toon 
 } from 'toon-ld';
 
 const jsonLd: string = '{"name": "Alice"}';
-const toon: string = convert_jsonld_to_toon(jsonLd);
+const toon: string = convert_jsonld_to_toonld(jsonLd);
 const isValid: boolean = validate_toon(toon);
 ```
 
@@ -191,14 +191,14 @@ const isValid: boolean = validate_toon(toon);
 
 ```javascript
 import express from 'express';
-import { convert_jsonld_to_toon, convert_toon_to_jsonld } from 'toon-ld';
+import { convert_jsonld_to_toonld, convert_toonld_to_jsonld } from 'toon-ld';
 
 const app = express();
 app.use(express.text({ type: 'text/toon' }));
 
 app.post('/convert/to-toon', (req, res) => {
   try {
-    const toon = convert_jsonld_to_toon(req.body);
+    const toon = convert_jsonld_to_toonld(req.body);
     res.type('text/toon').send(toon);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -207,7 +207,7 @@ app.post('/convert/to-toon', (req, res) => {
 
 app.post('/convert/to-jsonld', (req, res) => {
   try {
-    const jsonLd = convert_toon_to_jsonld(req.body);
+    const jsonLd = convert_toonld_to_jsonld(req.body);
     res.json(JSON.parse(jsonLd));
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -225,7 +225,7 @@ app.post('/convert/to-jsonld', (req, res) => {
 </head>
 <body>
   <script type="module">
-    import { convert_jsonld_to_toon, init } from 'https://unpkg.com/toon-ld';
+    import { convert_jsonld_to_toonld, init } from 'https://unpkg.com/toon-ld';
     
     init(); // Better error messages
     
@@ -234,7 +234,7 @@ app.post('/convert/to-jsonld', (req, res) => {
       "schema:name": "Example"
     });
     
-    const toon = convert_jsonld_to_toon(jsonLd);
+    const toon = convert_jsonld_to_toonld(jsonLd);
     console.log(toon);
   </script>
 </body>
@@ -254,7 +254,7 @@ const jsonLd = JSON.stringify({
   ]
 });
 
-const toon = convert_jsonld_to_toon(jsonLd);
+const toon = convert_jsonld_to_toonld(jsonLd);
 console.log(toon);
 // Output:
 // @context:
@@ -267,10 +267,10 @@ console.log(toon);
 ### Error Handling
 
 ```javascript
-import { convert_toon_to_jsonld } from 'toon-ld';
+import { convert_toonld_to_jsonld } from 'toon-ld';
 
 try {
-  const result = convert_toon_to_jsonld("invalid: [unclosed");
+  const result = convert_toonld_to_jsonld("invalid: [unclosed");
 } catch (error) {
   console.error("Conversion failed:", error.message);
   // Error message includes line numbers and helpful context

@@ -20,6 +20,7 @@ TOON-LD combines the semantic expressiveness of RDF/JSON-LD with radical token e
 - **Full JSON-LD Compatibility**: Round-trip conversion without data loss
 - **All JSON-LD 1.1 Keywords**: Complete support for `@context`, `@graph`, `@id`, `@type`, value nodes, etc.
 - **Cross-Platform**: Rust, WebAssembly (npm), and Python (PyPI) implementations
+- **High Performance**: Optimized serialization with automatic tabular array detection
 
 ## Benchmarks
 
@@ -117,11 +118,11 @@ toon-ld benchmark --max-records 10000
 
 ### Rust
 ```rust
-use toon_ld::{jsonld_to_toon, toon_to_jsonld};
+use toon_ld::{jsonld_to_toonld, toonld_to_jsonld};
 
 let json_ld = r#"{"@context": {"foaf": "http://xmlns.com/foaf/0.1/"}, "foaf:name": "Alice"}"#;
-let toon = jsonld_to_toon(json_ld)?;
-let back = toon_to_jsonld(&toon)?;
+let toon = jsonld_to_toonld(json_ld)?;
+let back = toonld_to_jsonld(&toon)?;
 ```
 
 ### Python
@@ -129,17 +130,17 @@ let back = toon_to_jsonld(&toon)?;
 import toon_ld
 
 json_ld = '{"@context": {"foaf": "http://xmlns.com/foaf/0.1/"}, "foaf:name": "Alice"}'
-toon_str = toon_ld.convert_jsonld_to_toon(json_ld)
-json_str = toon_ld.convert_toon_to_jsonld(toon_str)
+toon_str = toon_ld.convert_jsonld_to_toonldldld(json_ld)
+json_str = toon_ld.convert_toonld_to_jsonld(toon_str)
 ```
 
 ### JavaScript
 ```javascript
-import { convert_jsonld_to_toon, convert_toon_to_jsonld } from 'toon-ld';
+import { convert_jsonld_to_toonldldld, convert_toonld_to_jsonld } from 'toon-ld';
 
 const jsonLd = '{"@context": {"foaf": "http://xmlns.com/foaf/0.1/"}, "foaf:name": "Alice"}';
-const toon = convert_jsonld_to_toon(jsonLd);
-const json = convert_toon_to_jsonld(toon);
+const toon = convert_jsonld_to_toonldldld(jsonLd);
+const json = convert_toonld_to_jsonld(toon);
 ```
  
 

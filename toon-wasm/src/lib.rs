@@ -20,8 +20,8 @@ pub fn init() {
 /// * TOON-LD formatted string on success
 /// * Error message on failure
 #[wasm_bindgen]
-pub fn convert_jsonld_to_toon(json: String) -> Result<String, JsValue> {
-    toon_core::jsonld_to_toon(&json).map_err(|e| JsValue::from_str(&e.to_string()))
+pub fn convert_jsonld_to_toonld(json: String) -> Result<String, JsValue> {
+    toon_core::jsonld_to_toonld(&json).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
 /// Convert TOON-LD string to JSON-LD format
@@ -33,8 +33,8 @@ pub fn convert_jsonld_to_toon(json: String) -> Result<String, JsValue> {
 /// * JSON-LD formatted string (pretty-printed) on success
 /// * Error message on failure
 #[wasm_bindgen]
-pub fn convert_toon_to_jsonld(toon: String) -> Result<String, JsValue> {
-    toon_core::toon_to_jsonld(&toon).map_err(|e| JsValue::from_str(&e.to_string()))
+pub fn convert_toonld_to_jsonld(toon: String) -> Result<String, JsValue> {
+    toon_core::toonld_to_jsonld(&toon).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
 /// Validate a TOON-LD string
@@ -46,8 +46,8 @@ pub fn convert_toon_to_jsonld(toon: String) -> Result<String, JsValue> {
 /// * `true` if the string is valid TOON-LD
 /// * `false` otherwise
 #[wasm_bindgen]
-pub fn validate_toon(toon: String) -> bool {
-    toon_core::toon_to_jsonld(&toon).is_ok()
+pub fn validate_toonld(toon: String) -> bool {
+    toon_core::toonld_to_jsonld(&toon).is_ok()
 }
 
 /// Validate a JSON-LD string
@@ -67,9 +67,9 @@ pub fn validate_json(json: String) -> bool {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_jsonld_to_toon() {
+    fn test_jsonld_to_toonld() {
         let json = r#"{"name": "Alice", "age": 30}"#;
-        let result = toon_core::jsonld_to_toon(json);
+        let result = toon_core::jsonld_to_toonld(json);
         assert!(result.is_ok());
         let toon = result.unwrap();
         assert!(toon.contains("name: Alice"));
@@ -77,9 +77,9 @@ mod tests {
     }
 
     #[test]
-    fn test_toon_to_jsonld() {
+    fn test_toonld_to_jsonld() {
         let toon = "name: Alice\nage: 30";
-        let result = toon_core::toon_to_jsonld(toon);
+        let result = toon_core::toonld_to_jsonld(toon);
         assert!(result.is_ok());
         let json = result.unwrap();
         assert!(json.contains("\"name\""));
@@ -87,9 +87,9 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_toon() {
+    fn test_validate_toonld() {
         let valid = "name: Alice\nage: 30";
-        assert!(toon_core::toon_to_jsonld(valid).is_ok());
+        assert!(toon_core::toonld_to_jsonld(valid).is_ok());
     }
 
     #[test]
@@ -108,7 +108,7 @@ mod tests {
                 {"id": 2, "name": "Bob"}
             ]
         }"#;
-        let result = toon_core::jsonld_to_toon(json);
+        let result = toon_core::jsonld_to_toonld(json);
         assert!(result.is_ok());
         let toon = result.unwrap();
         assert!(toon.contains("users[2]"));
@@ -117,7 +117,7 @@ mod tests {
     #[test]
     fn test_invalid_json_error() {
         let invalid_json = r#"{"name": }"#;
-        let result = toon_core::jsonld_to_toon(invalid_json);
+        let result = toon_core::jsonld_to_toonld(invalid_json);
         assert!(result.is_err());
     }
 }

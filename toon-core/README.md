@@ -10,7 +10,7 @@ This crate provides the fundamental conversion algorithms between JSON-LD and TO
 - **TOON-LD to JSON-LD parsing** with full round-trip compatibility
 - **Context handling** for URI compaction and expansion
 - **Value node support** for language tags and datatypes
-- **Zero-copy parsing** where possible for performance
+- **Optimized parsing** with efficient data structures
 - **Comprehensive error handling** with detailed error messages
 
 ## Usage
@@ -84,7 +84,7 @@ All functions return `Result<T, ToonError>` where `ToonError` provides detailed 
 
 TOON-LD achieves:
 - **40-60% token reduction** compared to JSON-LD
-- **Efficient parsing** with minimal allocations
+- **Efficient parsing** with structured error handling
 - **Optimized serialization** with automatic tabular array detection
 
 ## Specification

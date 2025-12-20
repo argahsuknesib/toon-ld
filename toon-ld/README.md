@@ -14,7 +14,7 @@ TOON-LD extends TOON in the same way that JSON-LD extends JSON: **every valid TO
 - **Full JSON-LD Compatibility**: Round-trip conversion without data loss
 - **Tabular Arrays**: Serialize arrays of objects as CSV-like rows with shared headers
 - **All JSON-LD 1.1 Keywords**: Complete support for `@context`, `@graph`, `@id`, `@type`, value nodes, etc.
-- **High Performance**: Zero-copy parsing where possible, optimized serialization
+- **High Performance**: Optimized serialization with automatic tabular array detection
 - **Comprehensive Error Messages**: Detailed errors with line numbers and context
 
 ## Installation
@@ -132,7 +132,7 @@ let toon = jsonld_to_toon(json_ld)?;
 - `jsonld_to_toon(json: &str) -> Result<String, ToonError>` - Convert JSON-LD to TOON-LD
 - `toon_to_jsonld(toon: &str) -> Result<String, ToonError>` - Convert TOON-LD to JSON-LD
 - `parse_toon(toon: &str) -> Result<Value, ToonError>` - Parse TOON-LD to serde_json::Value
-- `serialize_to_toon(value: &Value) -> Result<String, ToonError>` - Serialize Value to TOON-LD
+- `serialize_to_toon(value: &Value) -> Result<String, ToonError>` - Serialize Value to TOON-LD with automatic tabular optimization
 
 ### Error Handling
 
