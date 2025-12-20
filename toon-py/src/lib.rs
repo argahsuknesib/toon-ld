@@ -41,7 +41,7 @@ fn convert_jsonld_to_toonld(json_str: &str) -> PyResult<String> {
 ///
 /// Example:
 ///     >>> import toon_ld
->>>     >>> toon_str = "name: Alice\nage: 30"
+///     >>> toon_str = "name: Alice\nage: 30"
 ///     >>> json_str = toon_ld.convert_toonld_to_jsonld(toon_str)
 ///     >>> print(json_str)
 ///     {

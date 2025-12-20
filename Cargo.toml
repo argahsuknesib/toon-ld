@@ -7,6 +7,9 @@ members = [
     # "toon-py",  # Temporarily disabled: PyO3 0.21.2 doesn't support Python 3.14 yet
     "toon-cli",
 ]
+exclude = [
+    "toon-py",
+]
 
 [workspace.package]
 version = "0.2.0"
