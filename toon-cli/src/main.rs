@@ -425,7 +425,8 @@ fn cmd_benchmark(input: Option<PathBuf>, max_records: usize) -> Result<()> {
             generate_sample_jsonld(num_records)
         };
 
-        let toonld = toon_core::jsonld_to_toonld(&jsonld).context("Failed to convert to TOON-LD")?;
+        let toonld =
+            toon_core::jsonld_to_toonld(&jsonld).context("Failed to convert to TOON-LD")?;
 
         // Normalize JSON for fair comparison
         let value: serde_json::Value = serde_json::from_str(&jsonld)?;
