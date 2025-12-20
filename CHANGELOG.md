@@ -11,41 +11,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional JSON-LD 1.1 keyword support (planned)
 - Streaming parser support (planned)
 
-## [0.2.0] - 2025-01-16
+## [0.2.0] - 2025-01-19
 
 ### BREAKING CHANGES
 
-This release redesigns TOON-LD to properly extend TOON in the same way that JSON-LD extends JSON. **Every valid TOON-LD document is now also a valid TOON document**, ensuring full compatibility with base TOON parsers.
+All function names have been updated to use `toonld` instead of `toon` to accurately reflect that we're converting to/from **TOON-LD** format, not generic TOON.
 
-#### Removed
-- **Compact value node syntax** (`"value"@lang` and `"value"^^type`) - This syntax was NOT valid TOON and broke the extension relationship
-- Special parsing for `@` language tag suffixes
-- Special parsing for `^^` datatype annotations
-- `value-node` production from EBNF grammar
+#### Changed Function Names
 
-#### Changed
-- **Value nodes now use standard TOON object syntax:**
-  - Language-tagged strings: `@value: <string>` + `@language: <lang>` as object fields
-  - Typed literals: `@value: <string>` + `@type: <datatype>` as object fields
-- **Value node arrays use tabular format for token efficiency:**
-  - `titles[N]{@value,@language}:` with CSV-like rows
-  - Achieves same or better token reduction while maintaining TOON compatibility
-- Updated specification to emphasize TOON compatibility as primary design goal
-- All JSON-LD keywords (`@context`, `@id`, `@type`, etc.) now treated as regular keys by TOON parsers, with semantic interpretation added by TOON-LD processors
+**Rust (toon-core, toon-ld):**
+- `jsonld_to_toon()` → `jsonld_to_toonld()`
+- `toon_to_jsonld()` → `toonld_to_jsonld()`
+
+**Python (toon-py):**
+- `convert_jsonld_to_toon()` → `convert_jsonld_to_toonld()`
+- `convert_toon_to_jsonld()` → `convert_toonld_to_jsonld()`
+- `validate_toon()` → `validate_toonld()`
+- `parse_toon()` → `parse_toonld()`
+- `serialize_to_toon()` → `serialize_to_toonld()`
+
+**JavaScript/TypeScript (toon-wasm):**
+- `convert_jsonld_to_toon()` → `convert_jsonld_to_toonld()`
+- `convert_toon_to_jsonld()` → `convert_toonld_to_jsonld()`
+- `validate_toon()` → `validate_toonld()`
+
+#### Package Changes
+
+**Rust:**
+- `toon-core` crate is now **deprecated** - use `toon-ld` instead
+- `toon-ld` v0.2.0 is the new recommended package
+- Both packages updated to use consistent naming
+
+**Python:**
+- Updated to v0.2.0 with new function names
+- Package name remains `toon-ld` on PyPI
+
+**npm:**
+- Updated to v0.2.0 with new function names
+- Package name remains `toon-ld` on npm
+
+#### Documentation Updates
+
+- Corrected misleading performance claims (removed "zero-copy parsing" - not currently implemented)
+- Updated all README files across packages
+- Added deprecation notice to `toon-core`
+- Updated code examples in all documentation
 
 #### Added
-- **TOON_COMPATIBILITY.md** - Comprehensive documentation of extension relationship
-- **MIGRATION.md** - Guide for migrating from previous incompatible syntax
-- **CHANGES_SUMMARY.md** - Complete summary of redesign
-- Section 1.2 "Relationship to TOON" in specification
-- Section 15.1 "TOON Compatibility Requirements" in specification
-- Conformance testing requirements for TOON parser compatibility
+- **MIGRATION.md** - Comprehensive migration guide from v0.1.x to v0.2.0
+- Migration examples for Rust, Python, and JavaScript/TypeScript
+- Automated migration scripts for all platforms
 
-#### Fixed
-- Extension relationship now matches JSON-LD → JSON pattern
-- All serialized output is guaranteed to be valid TOON
-- No syntax conflicts with base TOON specification
-- Grammar no longer includes non-TOON constructs
+#### Why This Change?
+
+The previous naming was misleading:
+- **TOON** is the base format (like JSON)
+- **TOON-LD** extends TOON with Linked Data semantics (like JSON-LD extends JSON)
+
+The old function names (`jsonld_to_toon`) suggested we were converting to generic TOON, but we're actually converting to TOON-LD. The new names (`jsonld_to_toonld`) accurately reflect this distinction.
 
 ## [0.1.0] - 2025-01-15
 

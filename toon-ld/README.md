@@ -23,7 +23,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-toon-ld = "0.1"
+toon-ld = "0.2"
 ```
 
 ## Quick Start

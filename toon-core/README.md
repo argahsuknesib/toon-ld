@@ -1,5 +1,9 @@
 # toon-core
 
+> **⚠️ DEPRECATED: Please use [`toon-ld`](https://crates.io/crates/toon-ld) instead.**
+>
+> This crate is no longer maintained. All functionality has been moved to the `toon-ld` crate, which provides a better user-facing API and naming scheme.
+
 Core serialization and parsing logic for the TOON-LD (Token-Oriented Object Notation for Linked Data) format.
 
 This crate provides the fundamental conversion algorithms between JSON-LD and TOON-LD formats, achieving 40-60% token reduction while maintaining full semantic compatibility with JSON-LD.

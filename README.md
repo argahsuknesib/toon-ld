@@ -84,7 +84,7 @@ This is standard TOON tabular syntax that base TOON parsers handle natively, whi
 ### Rust
 ```toml
 [dependencies]
-toon-ld = "0.1"
+toon-ld = "0.2"
 ```
 
 ### CLI
