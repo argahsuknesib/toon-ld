@@ -4,13 +4,17 @@
 [![PyPI](https://img.shields.io/pypi/v/toon-ld)](https://pypi.org/project/toon-ld/)
 [![Crates.io](https://img.shields.io/crates/v/toon-ld)](https://crates.io/crates/toon-ld)
 
-**Token-Oriented Object Notation for Linked Data** — A compact RDF serialization format that achieves 40-60% token reduction compared to JSON-LD, making it ideal for LLM applications and bandwidth-constrained environments.
+**Token-Oriented Object Notation for Linked Data** — A lossless **Knowledge Graph Compression** format for LLM Context Windows.
 
-TOON-LD extends TOON in the same way that JSON-LD extends JSON: **every valid TOON-LD document is also a valid TOON document**. Base TOON parsers can process TOON-LD without modification, while TOON-LD processors interpret `@-prefixed` keys according to JSON-LD semantics.
+TOON-LD reduces token usage by **40-60%** compared to JSON-LD, allowing you to fit twice as much structured data into your prompts for RAG (Retrieval-Augmented Generation) applications.
+
+It works by extending standard TOON syntax with Linked Data semantics, meaning **every valid TOON-LD document is also a valid TOON document**. Base TOON parsers can process it natively, while TOON-LD processors unlock the full semantic graph.
 
 ## Why TOON-LD?
 
-TOON-LD combines the semantic expressiveness of RDF/JSON-LD with radical token efficiency through tabular arrays. By eliminating repetitive keys and using CSV-like rows for uniform data, TOON-LD fits more information into LLM context windows while maintaining human readability.
+**The Problem:** Knowledge Graphs (JSON-LD) are incredibly verbose. Using them in RAG pipelines burns through token budgets and hits context limits fast.
+
+**The Solution:** TOON-LD acts as a compression layer. It combines the semantic expressiveness of RDF with radical token efficiency through tabular arrays. By eliminating repetitive keys and using CSV-like rows for uniform data, TOON-LD fits significantly more information into LLM context windows without losing structure.
 
 ## Features
 
