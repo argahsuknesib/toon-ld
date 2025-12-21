@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional JSON-LD 1.1 keyword support (planned)
 - Streaming parser support (planned)
 
+## [0.2.1] - 2025-01-22
+
+### Changed
+- Removed all emojis from codebase for cleaner professional appearance
+- Updated benchmarks and added new visualizations in README
+- Improved documentation structure (moved detailed docs to `docs/` folder)
+
 ## [0.2.0] - 2025-01-19
 
 ### BREAKING CHANGES
@@ -58,7 +65,7 @@ All function names have been updated to use `toonld` instead of `toon` to accura
 - Updated code examples in all documentation
 
 #### Added
-- **MIGRATION.md** - Comprehensive migration guide from v0.1.x to v0.2.0
+- **docs/MIGRATION.md** - Comprehensive migration guide from v0.1.x to v0.2.0
 - Migration examples for Rust, Python, and JavaScript/TypeScript
 - Automated migration scripts for all platforms
 

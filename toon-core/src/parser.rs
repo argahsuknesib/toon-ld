@@ -242,8 +242,22 @@ impl ToonParser {
                     .map(|s| s.trim().to_string())
                     .collect();
 
+                // Check if this key already exists - if so, we'll append to it
+                let should_merge = obj.contains_key(&key.to_string());
+
                 current_array_key = Some(key.to_string());
-                current_array = Vec::with_capacity(count);
+
+                // If merging, start with existing array; otherwise create new
+                if should_merge {
+                    if let Some(Value::Array(existing)) = obj.get(&key.to_string()) {
+                        current_array = existing.clone();
+                        current_array.reserve(count);
+                    } else {
+                        current_array = Vec::with_capacity(count);
+                    }
+                } else {
+                    current_array = Vec::with_capacity(count);
+                }
 
                 if count > 0 {
                     mode = ParseMode::Csv {
@@ -251,7 +265,9 @@ impl ToonParser {
                         remaining_rows: count,
                     };
                 } else if let Some(key) = current_array_key.take() {
-                    obj.insert(key, Value::Array(Vec::new()));
+                    if !should_merge {
+                        obj.insert(key, Value::Array(Vec::new()));
+                    }
                 }
                 i += 1;
                 continue;
@@ -751,5 +767,54 @@ items[1]{name,note}:
         assert_eq!(people.len(), 2);
         assert_eq!(people[0].get("name").unwrap(), "Alice");
         assert_eq!(people[1].get("name").unwrap(), "Bob");
+    }
+
+    #[test]
+    fn test_parse_multiple_array_blocks_same_key() {
+        // Test parsing multiple tabular array blocks with the same key
+        // This simulates shape-based partitioning output
+        let parser = ToonParser::new();
+
+        let toon = r#"
+@graph[2]{@id,@type,name,age}:
+  ex:1, Person, Alice, 30
+  ex:2, Person, Bob, 25
+
+@graph[1]{@id,@type,name,industry}:
+  ex:3, Organization, ACME, Tech
+"#;
+
+        let parsed = parser.parse(toon).unwrap();
+        let graph = parsed.get("@graph").expect("Should have @graph");
+        assert!(graph.is_array());
+
+        let graph_arr = graph.as_array().unwrap();
+        assert_eq!(graph_arr.len(), 3, "Should have merged all 3 entities");
+
+        // Verify entities are present
+        assert!(graph_arr
+            .iter()
+            .any(|v| v.get("@id").and_then(|id| id.as_str()) == Some("ex:1")));
+        assert!(graph_arr
+            .iter()
+            .any(|v| v.get("@id").and_then(|id| id.as_str()) == Some("ex:2")));
+        assert!(graph_arr
+            .iter()
+            .any(|v| v.get("@id").and_then(|id| id.as_str()) == Some("ex:3")));
+
+        // Verify different shapes are preserved
+        let alice = graph_arr
+            .iter()
+            .find(|v| v.get("@id").and_then(|id| id.as_str()) == Some("ex:1"))
+            .unwrap();
+        assert_eq!(alice.get("age").and_then(|v| v.as_i64()), Some(30));
+        assert!(alice.get("industry").is_none());
+
+        let acme = graph_arr
+            .iter()
+            .find(|v| v.get("@id").and_then(|id| id.as_str()) == Some("ex:3"))
+            .unwrap();
+        assert_eq!(acme.get("industry").and_then(|v| v.as_str()), Some("Tech"));
+        assert!(acme.get("age").is_none());
     }
 }

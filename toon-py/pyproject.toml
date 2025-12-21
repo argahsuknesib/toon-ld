@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "toon-ld"
-version = "0.2.0"
+version = "0.2.1"
 description = "High-performance serializer/parser for TOON-LD (Token-Oriented Object Notation for Linked Data)"
 readme = "README.md"
 license = { text = "MIT" }

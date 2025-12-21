@@ -11,7 +11,7 @@ keywords = ["toon", "json-ld", "rdf", "linked-data", "serialization"]
 categories = ["encoding", "parser-implementations", "wasm"]
 
 [dependencies]
-toon-core = { path = "../toon-core", version = "0.2" }
+toon-core = { path = "../toon-core", version = "0.2.1" }
 
 # Re-export all dependencies that are part of the public API
 serde = "1.0"
