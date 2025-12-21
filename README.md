@@ -28,10 +28,10 @@ Real-world token savings across different dataset sizes:
 
 | Records | JSON-LD Size | TOON-LD Size | Size Saved | Tokens Saved |
 |---------|--------------|--------------|------------|--------------|
-| 10      | 2,249 B      | 1,425 B      | **36.6%**  | **51.6%**    |
-| 100     | 20,208 B     | 11,375 B     | **43.7%**  | **57.8%**    |
-| 1,000   | 202,497 B    | 113,565 B    | **43.9%**  | **58.5%**    |
-| 10,000  | 2,052,356 B  | 1,162,425 B  | **43.4%**  | **58.6%**    |
+| 10      | 862 B        | 518 B        | **39.9%**  | **54.2%**    |
+| 100     | 8,782 B      | 5,109 B      | **41.8%**  | **56.3%**    |
+| 1,000   | 90,682 B     | 53,710 B     | **40.8%**  | **56.5%**    |
+| 10,000  | 936,682 B    | 566,711 B    | **39.5%**  | **53.4%**    |
 
 **Key takeaway**: Token savings scale well and are especially valuable for LLM context windows.
 

@@ -9,15 +9,14 @@
 //! Run with: cargo run --package toon-core --example token_benchmark
 
 use serde_json::json;
+use tiktoken_rs::o200k_base;
 use toon_core::ToonSerializer;
 
-/// Count tokens using a simple character-based approximation
-/// This counts non-whitespace characters as a proxy for tokens
-/// More accurate than split_whitespace() for compressed JSON
+/// Count tokens using GPT-4o tokenizer (o200k_base)
+/// This provides accurate real-world usage metrics for modern LLMs
 fn count_tokens(text: &str) -> usize {
-    // Count characters, commas, colons, braces, brackets as rough token estimate
-    // This is closer to how LLMs tokenize than whitespace splitting
-    text.chars().filter(|c| !c.is_whitespace()).count()
+    let bpe = o200k_base().unwrap();
+    bpe.encode_with_special_tokens(text).len()
 }
 
 /// Generate test data with specified sparsity

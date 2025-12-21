@@ -11,23 +11,23 @@ This benchmark compares token efficiency between JSON-LD (pretty-printed) and TO
 - **Entities**: 10 objects per test
 - **Available Fields**: 20 possible properties
 - **Sparsity Levels**: 0% to 100% in 10% increments
-- **Token Counting**: Character-based (non-whitespace characters)
+- **Token Counting**: **GPT-4o (o200k_base)** BPE tokenizer
 
 ## Token Count Comparison
 
 | Sparsity | JSON-LD | TOON Union | TOON Partition | Union vs JSON-LD | Partition vs JSON-LD | Partition vs Union |
 |----------|---------|------------|----------------|------------------|----------------------|-------------------|
-| 0%       | 4,463   | 2,218      | 2,218          | **+50.3%**       | **+50.3%**           | 0.0%              |
-| 10%      | 4,043   | 2,127      | 2,127          | **+47.4%**       | **+47.4%**           | 0.0%              |
-| 20%      | 3,621   | 2,035      | 2,035          | **+43.8%**       | **+43.8%**           | 0.0%              |
-| 30%      | 3,195   | 1,941      | 1,941          | **+39.2%**       | **+39.2%**           | 0.0%              |
-| 40%      | 2,767   | 1,846      | 2,335          | **+33.3%**       | **+15.6%**           | -26.5%            |
-| 50%      | 2,337   | 1,750      | 1,985          | **+25.1%**       | **+15.1%**           | -13.4%            |
-| 60%      | 1,909   | 1,655      | 1,637          | **+13.3%**       | **+14.2%**           | **+1.1%**         |
-| 70%      | 1,696   | 1,608      | 1,464          | **+5.2%**        | **+13.7%**           | **+9.0%**         |
-| 80%      | 1,061   | 1,469      | 949            | -38.5%           | **+10.6%**           | **+35.4%**        |
-| 90%      | 641     | 1,204      | 609            | -87.8%           | **+5.0%**            | **+49.4%**        |
-| 100%     | 432     | 756        | 440            | -75.0%           | -1.9%                | **+41.8%**        |
+| 0%       | 2,349   | 1,139      | 1,139          | **+51.5%**       | **+51.5%**           | 0.0%              |
+| 10%      | 2,129   | 1,079      | 1,079          | **+49.3%**       | **+49.3%**           | 0.0%              |
+| 20%      | 1,909   | 1,019      | 1,019          | **+46.6%**       | **+46.6%**           | 0.0%              |
+| 30%      | 1,689   | 959        | 959            | **+43.2%**       | **+43.2%**           | 0.0%              |
+| 40%      | 1,469   | 899        | 1,120          | **+38.8%**       | **+23.8%**           | -24.6%            |
+| 50%      | 1,249   | 839        | 960            | **+32.8%**       | **+23.1%**           | -14.4%            |
+| 60%      | 1,029   | 779        | 800            | **+24.3%**       | **+22.3%**           | -2.7%             |
+| 70%      | 919     | 749        | 720            | **+18.5%**       | **+21.7%**           | **+3.9%**         |
+| 80%      | 589     | 659        | 480            | -11.9%           | **+18.5%**           | **+27.2%**        |
+| 90%      | 369     | 530        | 320            | -43.6%           | **+13.3%**           | **+39.6%**        |
+| 100%     | 259     | 339        | 240            | -30.9%           | **+7.3%**            | **+29.2%**        |
 
 **Note**: Positive percentages indicate token savings (fewer tokens = better)
 
@@ -51,39 +51,38 @@ This benchmark compares token efficiency between JSON-LD (pretty-printed) and TO
 
 ### 1. TOON-LD vs JSON-LD (Overall)
 
-- **Best Case**: 50.3% token savings at 0% sparsity (homogeneous data)
+- **Best Case**: 51.5% token savings at 0% sparsity (homogeneous data)
 - **Average Savings**: 
-  - TOON Union: 5.1% average
-  - TOON Partition: 23.0% average
+  - TOON Union: 19.9% average
+  - TOON Partition: 29.1% average
 - **Winner**: TOON-LD Partition is consistently better across most sparsity levels
 - **Byte Savings**: TOON-LD provides 28-61% byte size reduction at low to medium sparsity
 
 ### 2. Union vs Partition (When to Use Which)
 
-- **Crossover Point**: ~55% sparsity
-  - Below 55%: Union schema is more efficient (avoids header duplication overhead)
-  - Above 55%: Partitioning is more efficient (eliminates null delimiter overhead)
+- **Crossover Point**: ~65% sparsity
+  - Below 65%: Union schema is more efficient (avoids header duplication overhead)
+  - Above 65%: Partitioning is more efficient (eliminates null delimiter overhead)
   
-- **Maximum Partition Advantage**: 49.4% token savings at 90% sparsity
+- **Maximum Partition Advantage**: 39.6% token savings at 90% sparsity
 
 ### 3. Current 30% Threshold Analysis
 
 The current implementation triggers partitioning at 30% sparsity. Benchmark shows:
 
-- **Actual Crossover**: 55% sparsity
-- **At 30% Threshold**: Both approaches have identical token counts (1,941 tokens)
+- **Actual Crossover**: 65% sparsity
+- **At 30% Threshold**: Both approaches have identical token counts (959 tokens)
 - **Recommendation**: Threshold is conservative (triggers early) but safe
   - Pro: Ensures partitioning is available for moderately sparse data
   - Con: May partition slightly too early in some edge cases
-  - Suggested adjustment: Could be raised to 40-50% for stricter optimization
+  - Suggested adjustment: Could be raised to 60-70% for stricter optimization
 
 ### 4. Sparsity-Specific Recommendations
 
 | Sparsity Range | Best Choice        | Token Savings vs JSON-LD | Use Case                           |
 |----------------|--------------------|--------------------------|------------------------------------|
-| 0-30%          | TOON Union         | 39-50%                   | Homogeneous data, same schema      |
-| 30-60%         | Either works       | 13-39%                   | Slightly heterogeneous data        |
-| 60-100%        | TOON Partition     | 5-14%                    | Highly heterogeneous, mixed types  |
+| 0-60%          | TOON Union         | 24-51%                   | Homogeneous data, same schema      |
+| 60-100%        | TOON Partition     | 7-22%                    | Highly heterogeneous, mixed types  |
 
 ## Visual Analysis
 
@@ -104,35 +103,35 @@ The current implementation triggers partitioning at 30% sparsity. Benchmark show
 ### Example 1: Homogeneous Dataset (0% sparsity)
 **Scenario**: 10 user records, all with same fields (id, name, email, age, city)
 
-- JSON-LD: 6,251 bytes
-- TOON-LD: 2,449 bytes
-- **Savings**: 60.8% (3,802 bytes)
+- JSON-LD: 2,349 tokens
+- TOON-LD: 1,139 tokens
+- **Savings**: 51.5% (1,210 tokens)
 - **Recommendation**: Use either TOON variant
 
 ### Example 2: Heterogeneous RDF Graph (70% sparsity)
 **Scenario**: Mixed entities (Persons, Organizations, Events) with mostly different properties
 
-- JSON-LD: 2,444 bytes
-- TOON Union: 1,839 bytes (24.8% savings)
-- TOON Partition: 1,583 bytes (35.2% savings)
-- **Savings**: Partitioning provides additional 13.9% improvement
+- JSON-LD: 919 tokens
+- TOON Union: 749 tokens (18.5% savings)
+- TOON Partition: 720 tokens (21.7% savings)
+- **Savings**: Partitioning provides additional 3.9% improvement
 - **Recommendation**: Use TOON Partition
 
 ### Example 3: Extremely Sparse Data (90% sparsity)
 **Scenario**: Diverse entities with very few shared properties
 
-- JSON-LD: 989 bytes
-- TOON Partition: 678 bytes
-- **Savings**: 31.4%
+- JSON-LD: 369 tokens
+- TOON Partition: 320 tokens
+- **Savings**: 13.3%
 - **Recommendation**: Use TOON Partition (union schema actually worse than JSON-LD here!)
 
 ## Conclusions
 
 1. **TOON-LD always beats JSON-LD** for low to medium sparsity (0-70%)
-2. **Shape-based partitioning shines** at high sparsity (60%+), providing 30-50% additional savings
-3. **Union schema is best** for homogeneous data (0-50% sparsity)
+2. **Shape-based partitioning shines** at high sparsity (70%+), providing significant additional savings
+3. **Union schema is best** for homogeneous data (0-60% sparsity)
 4. **Very high sparsity** (80%+): JSON-LD becomes competitive due to its compact representation of sparse data
-5. **Average use case** (30-50% sparsity): TOON-LD provides 25-40% token savings
+5. **Average use case** (30-50% sparsity): TOON-LD provides 23-43% token savings
 
 ## Recommendations for Users
 
@@ -144,7 +143,7 @@ The current implementation triggers partitioning at 30% sparsity. Benchmark show
 
 ## Methodology Notes
 
-- Token counting uses character-based approximation (non-whitespace chars)
+- Token counting uses **GPT-4o (o200k_base)** tokenizer
 - JSON-LD is pretty-printed for fair comparison with TOON-LD
 - Test data uses synthetic entities with controlled field overlap
 - Real-world results may vary based on actual data characteristics
