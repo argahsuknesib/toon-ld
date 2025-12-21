@@ -810,7 +810,7 @@ impl ToonSerializer {
         for item in arr {
             if let Value::Object(obj) = item {
                 let sig = self.entity_signature(obj);
-                shape_map.entry(sig).or_insert_with(Vec::new).push(item);
+                shape_map.entry(sig).or_default().push(item);
             }
         }
 
