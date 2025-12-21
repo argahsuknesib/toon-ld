@@ -1,6 +1,6 @@
 # toon-core
 
-> **⚠️ DEPRECATED: Please use [`toon-ld`](https://crates.io/crates/toon-ld) instead.**
+> **DEPRECATED: Please use [`toon-ld`](https://crates.io/crates/toon-ld) instead.**
 >
 > This crate is no longer maintained. All functionality has been moved to the `toon-ld` crate, which provides a better user-facing API and naming scheme.
 

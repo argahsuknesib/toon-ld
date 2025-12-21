@@ -22,6 +22,10 @@ const DEFAULT_INDENT_SIZE: usize = 2;
 /// Maximum inline array length before switching to multi-line format
 const MAX_INLINE_ARRAY_LENGTH: usize = 60;
 
+/// Sparsity threshold for enabling shape-based partitioning (30%)
+/// If null cells exceed this percentage, arrays will be partitioned by shape
+const SPARSITY_THRESHOLD: f64 = 0.30;
+
 /// TOON-LD Serializer
 ///
 /// Converts JSON/JSON-LD values to TOON-LD format. The serializer handles:
@@ -52,6 +56,8 @@ pub struct ToonSerializer {
     context: JsonLdContext,
     /// Number of spaces per indentation level
     indent_size: usize,
+    /// Enable shape-based partitioning for sparse arrays
+    enable_shape_partitioning: bool,
 }
 
 impl Default for ToonSerializer {
@@ -74,6 +80,7 @@ impl ToonSerializer {
         Self {
             context: JsonLdContext::new(),
             indent_size: DEFAULT_INDENT_SIZE,
+            enable_shape_partitioning: true,
         }
     }
 
@@ -124,6 +131,27 @@ impl ToonSerializer {
     /// Get the current indentation size.
     pub fn indent_size(&self) -> usize {
         self.indent_size
+    }
+
+    /// Enable or disable shape-based partitioning for sparse arrays.
+    ///
+    /// When enabled, arrays with high sparsity (> 30% null values) will be
+    /// automatically partitioned by entity shape to reduce null delimiter overhead.
+    ///
+    /// # Arguments
+    ///
+    /// * `enable` - Whether to enable shape-based partitioning
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use toon_core::ToonSerializer;
+    ///
+    /// let serializer = ToonSerializer::new().with_shape_partitioning(true);
+    /// ```
+    pub fn with_shape_partitioning(mut self, enable: bool) -> Self {
+        self.enable_shape_partitioning = enable;
+        self
     }
 
     /// Serialize a JSON value to TOON-LD format.
@@ -546,6 +574,17 @@ impl ToonSerializer {
 
         // Check if this is an array of objects (can use tabular format)
         if let Some(fields) = self.get_tabular_fields(arr) {
+            // Calculate sparsity and decide whether to partition
+            if self.enable_shape_partitioning {
+                let sparsity = self.calculate_sparsity(arr, &fields);
+
+                // If sparsity exceeds threshold, use shape-based partitioning
+                if sparsity > SPARSITY_THRESHOLD {
+                    return self.serialize_partitioned_array(key, arr, depth, output);
+                }
+            }
+
+            // Otherwise use standard union schema approach
             self.serialize_tabular_array(key, arr, &fields, depth, output)?;
         } else if self.is_primitive_array(arr) {
             self.serialize_primitive_array(key, arr, depth, output)?;
@@ -721,6 +760,124 @@ impl ToonSerializer {
     #[inline]
     fn make_indent(&self, depth: usize) -> String {
         " ".repeat(depth * self.indent_size)
+    }
+
+    /// Calculate sparsity of an array with given fields.
+    /// Returns the ratio of null values to total cells.
+    fn calculate_sparsity(&self, arr: &[Value], fields: &[String]) -> f64 {
+        if arr.is_empty() || fields.is_empty() {
+            return 0.0;
+        }
+
+        let mut null_count = 0;
+        let total_cells = arr.len() * fields.len();
+
+        for item in arr {
+            if let Value::Object(obj) = item {
+                for field in fields {
+                    if !obj.contains_key(field) {
+                        null_count += 1;
+                    }
+                }
+            }
+        }
+
+        null_count as f64 / total_cells as f64
+    }
+
+    /// Generate a deterministic signature for an entity based on its keys.
+    /// Keys are sorted alphabetically to ensure consistency.
+    fn entity_signature(&self, obj: &Map<String, Value>) -> String {
+        let mut keys: Vec<&String> = obj.keys().collect();
+        keys.sort();
+        keys.into_iter()
+            .map(|k| k.as_str())
+            .collect::<Vec<&str>>()
+            .join("|")
+    }
+
+    /// Partition array entities by their shape signature.
+    /// Returns a Vec of (signature, fields, entities) tuples.
+    fn partition_by_shape<'a>(
+        &self,
+        arr: &'a [Value],
+    ) -> Vec<(String, Vec<String>, Vec<&'a Value>)> {
+        use std::collections::HashMap;
+
+        let mut shape_map: HashMap<String, Vec<&Value>> = HashMap::new();
+
+        // Group entities by signature
+        for item in arr {
+            if let Value::Object(obj) = item {
+                let sig = self.entity_signature(obj);
+                shape_map.entry(sig).or_insert_with(Vec::new).push(item);
+            }
+        }
+
+        // Convert to sorted output format
+        let mut partitions: Vec<(String, Vec<String>, Vec<&Value>)> = shape_map
+            .into_iter()
+            .map(|(sig, entities)| {
+                let fields: Vec<String> = sig.split('|').map(String::from).collect();
+                (sig, fields, entities)
+            })
+            .collect();
+
+        // Sort by entity count (largest groups first) for better readability
+        partitions.sort_by(|a, b| b.2.len().cmp(&a.2.len()));
+
+        partitions
+    }
+
+    /// Serialize a keyed array using shape-based partitioning.
+    /// Emits multiple array blocks, each with entities of the same shape.
+    fn serialize_partitioned_array(
+        &self,
+        key: &str,
+        arr: &[Value],
+        depth: usize,
+        output: &mut String,
+    ) -> Result<()> {
+        let partitions = self.partition_by_shape(arr);
+        let indent = self.make_indent(depth);
+        let row_indent = self.make_indent(depth + 1);
+
+        for (idx, (_sig, fields, entities)) in partitions.iter().enumerate() {
+            // Add spacing between partitions (except before first)
+            if idx > 0 {
+                output.push('\n');
+            }
+
+            // Compact field names
+            let compact_fields: Vec<String> =
+                fields.iter().map(|f| self.context.compact_uri(f)).collect();
+
+            // Write header: key[N]{field1,field2}:
+            output.push_str(&format!(
+                "{}{}[{}]{{{}}}:\n",
+                indent,
+                key,
+                entities.len(),
+                compact_fields.join(",")
+            ));
+
+            // Write CSV rows
+            for entity in entities {
+                if let Value::Object(obj) = entity {
+                    let values: Vec<String> = fields
+                        .iter()
+                        .map(|field| {
+                            obj.get(field)
+                                .map(|v| self.value_to_csv_cell(v))
+                                .unwrap_or_else(|| "null".to_string())
+                        })
+                        .collect();
+                    output.push_str(&format!("{}{}\n", row_indent, values.join(", ")));
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -948,7 +1105,8 @@ mod tests {
 
     #[test]
     fn test_tabular_array_union_of_keys() {
-        let serializer = ToonSerializer::new();
+        // Disable partitioning to test union schema explicitly
+        let serializer = ToonSerializer::new().with_shape_partitioning(false);
 
         let value = json!({
             "items": [
@@ -963,5 +1121,207 @@ mod tests {
         // Missing fields should be null
         assert!(toon.contains("1, 2, null"));
         assert!(toon.contains("3, null, 4"));
+    }
+
+    #[test]
+    fn test_shape_partitioning_disabled() {
+        // Test with partitioning disabled - should use union schema
+        let serializer = ToonSerializer::new().with_shape_partitioning(false);
+
+        let value = json!({
+            "items": [
+                {"a": 1, "b": 2},
+                {"a": 3, "c": 4},
+                {"x": 5, "y": 6}
+            ]
+        });
+
+        let toon = serializer.serialize(&value).unwrap();
+        // Should use union schema even with high sparsity
+        assert!(toon.contains("items[3]{a,b,c,x,y}:"));
+    }
+
+    #[test]
+    fn test_shape_partitioning_low_sparsity() {
+        // Test with low sparsity - should NOT partition
+        let serializer = ToonSerializer::new();
+
+        let value = json!({
+            "items": [
+                {"a": 1, "b": 2},
+                {"a": 3, "b": 4},
+                {"a": 5, "b": 6}
+            ]
+        });
+
+        let toon = serializer.serialize(&value).unwrap();
+        // Low sparsity - should use single table
+        assert!(toon.contains("items[3]{a,b}:"));
+        assert!(!toon.contains("items[1]")); // No partitions
+    }
+
+    #[test]
+    fn test_shape_partitioning_high_sparsity() {
+        // Test with high sparsity - SHOULD partition
+        let serializer = ToonSerializer::new();
+
+        let value = json!({
+            "people": [
+                {"@id": "ex:1", "name": "Alice", "age": 30, "email": "alice@example.com"},
+                {"@id": "ex:2", "name": "Bob", "phone": "+1234567890", "address": "123 Main St"},
+                {"@id": "ex:3", "name": "Carol", "company": "ACME", "role": "Engineer", "salary": 100000}
+            ]
+        });
+
+        let toon = serializer.serialize(&value).unwrap();
+
+        // High sparsity - should partition into separate blocks
+        // Each entity has completely different fields, so they should be separate
+        assert!(
+            toon.contains("people[1]"),
+            "Should have partitioned blocks with [1]"
+        );
+
+        // Count how many people[] blocks we have
+        let people_blocks = toon.matches("people[").count();
+        assert_eq!(
+            people_blocks, 3,
+            "Should have 3 separate blocks (one per entity) due to completely different shapes"
+        );
+
+        // Should NOT have the union of all keys in one header
+        assert!(
+            !toon.contains("people[3]"),
+            "Should not have a single block with all 3 entities"
+        );
+    }
+
+    #[test]
+    fn test_shape_partitioning_heterogeneous_graph() {
+        let serializer = ToonSerializer::new();
+
+        let value = json!({
+            "@graph": [
+                {"@id": "ex:person1", "@type": "Person", "name": "Alice", "age": 30, "email": "alice@example.com"},
+                {"@id": "ex:person2", "@type": "Person", "name": "Bob", "age": 25, "email": "bob@example.com"},
+                {"@id": "ex:org1", "@type": "Organization", "name": "ACME", "industry": "Tech", "founded": 2000, "employees": 500, "revenue": 10000000},
+                {"@id": "ex:org2", "@type": "Organization", "name": "XYZ", "industry": "Finance", "founded": 1995, "employees": 300, "revenue": 5000000}
+            ]
+        });
+
+        let toon = serializer.serialize(&value).unwrap();
+        // Should partition by shape
+        assert!(toon.contains("@graph[2]"));
+        // Should have separate blocks for Person and Organization
+        let graph_count = toon.matches("@graph[").count();
+        assert_eq!(graph_count, 2, "Should have 2 @graph blocks");
+    }
+
+    #[test]
+    fn test_calculate_sparsity() {
+        let serializer = ToonSerializer::new();
+
+        // Test high sparsity
+        let high_sparse = vec![json!({"a": 1}), json!({"b": 2}), json!({"c": 3})];
+        let fields = vec!["a".to_string(), "b".to_string(), "c".to_string()];
+        let sparsity = serializer.calculate_sparsity(&high_sparse, &fields);
+        assert!(sparsity > 0.6, "Should have high sparsity (~66%)");
+
+        // Test low sparsity
+        let low_sparse = vec![json!({"a": 1, "b": 2}), json!({"a": 3, "b": 4})];
+        let fields = vec!["a".to_string(), "b".to_string()];
+        let sparsity = serializer.calculate_sparsity(&low_sparse, &fields);
+        assert_eq!(sparsity, 0.0, "Should have zero sparsity");
+    }
+
+    #[test]
+    fn test_entity_signature() {
+        let serializer = ToonSerializer::new();
+
+        let obj1 =
+            serde_json::from_str::<Map<String, Value>>(r#"{"name": "Alice", "age": 30}"#).unwrap();
+        let obj2 =
+            serde_json::from_str::<Map<String, Value>>(r#"{"age": 30, "name": "Bob"}"#).unwrap();
+        let obj3 = serde_json::from_str::<Map<String, Value>>(
+            r#"{"name": "Carol", "email": "c@example.com"}"#,
+        )
+        .unwrap();
+
+        let sig1 = serializer.entity_signature(&obj1);
+        let sig2 = serializer.entity_signature(&obj2);
+        let sig3 = serializer.entity_signature(&obj3);
+
+        // Same keys should produce same signature (order independent)
+        assert_eq!(sig1, sig2);
+        assert_eq!(sig1, "age|name");
+
+        // Different keys should produce different signature
+        assert_ne!(sig1, sig3);
+        assert_eq!(sig3, "email|name");
+    }
+
+    #[test]
+    fn test_partition_by_shape() {
+        let serializer = ToonSerializer::new();
+
+        let arr = vec![
+            json!({"a": 1, "b": 2}),
+            json!({"a": 3, "b": 4}),
+            json!({"x": 5, "y": 6}),
+            json!({"x": 7, "y": 8}),
+            json!({"x": 9, "y": 10}),
+        ];
+
+        let partitions = serializer.partition_by_shape(&arr);
+
+        // Should have 2 partitions
+        assert_eq!(partitions.len(), 2);
+
+        // Largest partition should come first (3 entities with x,y)
+        assert_eq!(partitions[0].2.len(), 3);
+        assert_eq!(partitions[1].2.len(), 2);
+    }
+
+    #[test]
+    fn test_shape_partitioning_roundtrip() {
+        use crate::ToonParser;
+
+        let serializer = ToonSerializer::new();
+        let parser = ToonParser::new();
+
+        let original = json!({
+            "@graph": [
+                {"@id": "ex:1", "@type": "Person", "name": "Alice", "age": 30},
+                {"@id": "ex:2", "@type": "Person", "name": "Bob", "age": 25},
+                {"@id": "ex:3", "@type": "Org", "name": "ACME", "industry": "Tech"}
+            ]
+        });
+
+        // Serialize with partitioning
+        let toon = serializer.serialize(&original).unwrap();
+
+        // Parse back
+        let parsed = parser.parse(&toon).unwrap();
+
+        // Should have @graph array with all 3 entities
+        let graph = parsed.get("@graph").expect("Should have @graph");
+        assert!(graph.is_array());
+        let graph_arr = graph.as_array().unwrap();
+        assert_eq!(
+            graph_arr.len(),
+            3,
+            "Should have all 3 entities after parsing"
+        );
+
+        // Verify all entities are present
+        assert!(graph_arr
+            .iter()
+            .any(|v| v.get("@id").and_then(|id| id.as_str()) == Some("ex:1")));
+        assert!(graph_arr
+            .iter()
+            .any(|v| v.get("@id").and_then(|id| id.as_str()) == Some("ex:2")));
+        assert!(graph_arr
+            .iter()
+            .any(|v| v.get("@id").and_then(|id| id.as_str()) == Some("ex:3")));
     }
 }

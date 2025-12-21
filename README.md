@@ -35,6 +35,29 @@ Real-world token savings across different dataset sizes:
 
 **Key takeaway**: Token savings scale well and are especially valuable for LLM context windows.
 
+### Sparsity Analysis
+
+TOON-LD's efficiency depends on data sparsity. Shape-based partitioning (enabled by default) ensures TOON-LD remains efficient even for highly heterogeneous data.
+
+![Token Efficiency Graph](docs/images/benchmark_sparsity.png)
+
+![Savings Percentage Graph](docs/images/benchmark_savings.png)
+
+- **Low Sparsity (0-30%)**: Both Union and Partition approaches save ~40-50% tokens.
+- **High Sparsity (60%+)**: Partitioning significantly outperforms the Union schema, maintaining efficiency where standard tabular formats fail.
+
+#### Token Cost Analysis
+
+**Union Schema**: High cost when `null_count` is large (sparse data).
+**Partitioned Schema**: Low cost when partitions have dense, non-overlapping fields.
+
+**Break-even point**: ~30% sparsity threshold balances both approaches.
+
+**Partitioning excels when:**
+- High field diversity (heterogeneous graphs)
+- Large datasets
+- Mixed entity types
+
 ## Quick Example
 
 **JSON-LD:**
@@ -130,16 +153,16 @@ let back = toonld_to_jsonld(&toon)?;
 import toon_ld
 
 json_ld = '{"@context": {"foaf": "http://xmlns.com/foaf/0.1/"}, "foaf:name": "Alice"}'
-toon_str = toon_ld.convert_jsonld_to_toonldldld(json_ld)
+toon_str = toon_ld.convert_jsonld_to_toonld(json_ld)
 json_str = toon_ld.convert_toonld_to_jsonld(toon_str)
 ```
 
 ### JavaScript
 ```javascript
-import { convert_jsonld_to_toonldldld, convert_toonld_to_jsonld } from 'toon-ld';
+import { convert_jsonld_to_toonld, convert_toonld_to_jsonld } from 'toon-ld';
 
 const jsonLd = '{"@context": {"foaf": "http://xmlns.com/foaf/0.1/"}, "foaf:name": "Alice"}';
-const toon = convert_jsonld_to_toonldldld(jsonLd);
+const toon = convert_jsonld_to_toonld(jsonLd);
 const json = convert_toonld_to_jsonld(toon);
 ```
  

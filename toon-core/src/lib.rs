@@ -234,7 +234,8 @@ mod tests {
 
     #[test]
     fn test_missing_fields_in_tabular() {
-        let serializer = ToonSerializer::new();
+        // Disable partitioning to test union schema explicitly
+        let serializer = ToonSerializer::new().with_shape_partitioning(false);
         let parser = ToonParser::new();
 
         // Non-uniform array should still use tabular format with union of keys
