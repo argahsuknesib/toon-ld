@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 toon-core = { path = "../toon-core", version = "0.2.1" }
-pyo3 = { version = "0.21", features = ["extension-module"] }
+pyo3 = { version = "0.21", features = ["extension-module", "abi3-py38"] }
 serde_json = "1.0"
 
 [build-dependencies]
