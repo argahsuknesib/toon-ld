@@ -32,8 +32,9 @@ yarn add toon-ld
 ## Quick Start
 
 ```javascript
-import { convert_jsonld_to_toonld, convert_toonld_to_jsonld } from 'toon-ld';
+import { convertJsonldToToonld, convertToonldToJsonld, parseToonld, serializeToonld } from 'toon-ld';
 
+// 1. String Conversion
 // Convert JSON-LD to TOON-LD
 const jsonLd = JSON.stringify({
   "@context": {"foaf": "http://xmlns.com/foaf/0.1/"},
@@ -41,7 +42,7 @@ const jsonLd = JSON.stringify({
   "foaf:age": 30
 });
 
-const toon = convert_jsonld_to_toonld(jsonLd);
+const toon = convertJsonldToToonld(jsonLd);
 console.log(toon);
 // Output:
 // @context:
@@ -50,9 +51,20 @@ console.log(toon);
 // foaf:age: 30
 
 // Convert back to JSON-LD
-const backToJson = convert_toonld_to_jsonld(toon);
+const backToJson = convertToonldToJsonld(toon);
 const parsed = JSON.parse(backToJson);
 console.log(parsed);
+
+// 2. Object Helper Functions
+// Parse directly to JS Object
+const data = parseToonld(toon);
+console.log(data['foaf:name']); // "Alice"
+
+// Serialize JS Object directly to TOON-LD
+const toonStr = serializeToonld({
+  "@context": {"schema": "http://schema.org/"},
+  "schema:name": "Bob"
+});
 ```
 
 ## Tabular Arrays - The Key Feature
@@ -85,7 +97,7 @@ Notice how object keys appear once in the header instead of repeating for each o
 
 ## API Reference
 
-### `convert_jsonld_to_toonld(json: string): string`
+### `convertJsonldToToonld(json: string): string`
 
 Convert a JSON-LD string to TOON-LD format.
 
@@ -98,13 +110,7 @@ Convert a JSON-LD string to TOON-LD format.
 **Throws:**
 - Error with message if the input is invalid JSON
 
-**Example:**
-```javascript
-const jsonLd = '{"@context": {"foaf": "http://xmlns.com/foaf/0.1/"}, "foaf:name": "Alice"}';
-const toon = convert_jsonld_to_toonld(jsonLd);
-```
-
-### `convert_toonld_to_jsonld(toon: string): string`
+### `convertToonldToJsonld(toon: string): string`
 
 Convert a TOON-LD string to JSON-LD format.
 
@@ -117,15 +123,27 @@ Convert a TOON-LD string to JSON-LD format.
 **Throws:**
 - Error with message if the input is invalid TOON-LD
 
-**Example:**
-```javascript
-const toon = `@context:
-  foaf: http://xmlns.com/foaf/0.1/
-foaf:name: Alice`;
-const jsonLd = convert_toonld_to_jsonld(toon);
-```
+### `parseToonld(toon: string): any`
 
-### `validate_json(json: string): boolean`
+Parse a TOON-LD string directly into a JavaScript Object.
+
+**Parameters:**
+- `toon` - A TOON-LD formatted string
+
+**Returns:**
+- JavaScript Object representing the data
+
+### `serializeToonld(data: any): string`
+
+Serialize a JavaScript Object directly into a TOON-LD string.
+
+**Parameters:**
+- `data` - A JavaScript Object
+
+**Returns:**
+- TOON-LD formatted string
+
+### `validateJson(json: string): boolean`
 
 Validate a JSON-LD string.
 
@@ -135,13 +153,7 @@ Validate a JSON-LD string.
 **Returns:**
 - `true` if the string is valid JSON, `false` otherwise
 
-**Example:**
-```javascript
-const isValid = validate_json('{"name": "Alice"}');
-console.log(isValid); // true
-```
-
-### `validate_toon(toon: string): boolean`
+### `validateToonld(toon: string): boolean`
 
 Validate a TOON-LD string.
 
@@ -150,12 +162,6 @@ Validate a TOON-LD string.
 
 **Returns:**
 - `true` if the string is valid TOON-LD, `false` otherwise
-
-**Example:**
-```javascript
-const isValid = validate_toon('name: Alice');
-console.log(isValid); // true
-```
 
 ### `init(): void`
 
@@ -174,15 +180,15 @@ This package includes TypeScript type definitions out of the box:
 
 ```typescript
 import { 
-  convert_jsonld_to_toonld, 
-  convert_toonld_to_jsonld,
-  validate_json,
-  validate_toon 
+  convertJsonldToToonld, 
+  convertToonldToJsonld,
+  validateJson,
+  validateToonld 
 } from 'toon-ld';
 
 const jsonLd: string = '{"name": "Alice"}';
-const toon: string = convert_jsonld_to_toonld(jsonLd);
-const isValid: boolean = validate_toon(toon);
+const toon: string = convertJsonldToToonld(jsonLd);
+const isValid: boolean = validateToonld(toon);
 ```
 
 ## Usage Examples
@@ -191,14 +197,14 @@ const isValid: boolean = validate_toon(toon);
 
 ```javascript
 import express from 'express';
-import { convert_jsonld_to_toonld, convert_toonld_to_jsonld } from 'toon-ld';
+import { convertJsonldToToonld, convertToonldToJsonld } from 'toon-ld';
 
 const app = express();
 app.use(express.text({ type: 'text/toon' }));
 
 app.post('/convert/to-toon', (req, res) => {
   try {
-    const toon = convert_jsonld_to_toonld(req.body);
+    const toon = convertJsonldToToonld(req.body);
     res.type('text/toon').send(toon);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -207,7 +213,7 @@ app.post('/convert/to-toon', (req, res) => {
 
 app.post('/convert/to-jsonld', (req, res) => {
   try {
-    const jsonLd = convert_toonld_to_jsonld(req.body);
+    const jsonLd = convertToonldToJsonld(req.body);
     res.json(JSON.parse(jsonLd));
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -225,7 +231,7 @@ app.post('/convert/to-jsonld', (req, res) => {
 </head>
 <body>
   <script type="module">
-    import { convert_jsonld_to_toonld, init } from 'https://unpkg.com/toon-ld';
+    import { convertJsonldToToonld, init } from 'https://unpkg.com/toon-ld';
     
     init(); // Better error messages
     
@@ -234,7 +240,7 @@ app.post('/convert/to-jsonld', (req, res) => {
       "schema:name": "Example"
     });
     
-    const toon = convert_jsonld_to_toonld(jsonLd);
+    const toon = convertJsonldToToonld(jsonLd);
     console.log(toon);
   </script>
 </body>
@@ -254,7 +260,7 @@ const jsonLd = JSON.stringify({
   ]
 });
 
-const toon = convert_jsonld_to_toonld(jsonLd);
+const toon = convertJsonldToToonld(jsonLd);
 console.log(toon);
 // Output:
 // @context:
@@ -267,10 +273,10 @@ console.log(toon);
 ### Error Handling
 
 ```javascript
-import { convert_toonld_to_jsonld } from 'toon-ld';
+import { convertToonldToJsonld } from 'toon-ld';
 
 try {
-  const result = convert_toonld_to_jsonld("invalid: [unclosed");
+  const result = convertToonldToJsonld("invalid: [unclosed");
 } catch (error) {
   console.error("Conversion failed:", error.message);
   // Error message includes line numbers and helpful context

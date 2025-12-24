@@ -24,6 +24,12 @@ pub fn convert_jsonld_to_toonld(json: String) -> Result<String, JsValue> {
     toon_core::jsonld_to_toonld(&json).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
+/// Convert JSON-LD string to TOON-LD format (camelCase alias)
+#[wasm_bindgen(js_name = convertJsonldToToonld)]
+pub fn convert_jsonld_to_toonld_js(json: String) -> Result<String, JsValue> {
+    convert_jsonld_to_toonld(json)
+}
+
 /// Convert TOON-LD string to JSON-LD format
 ///
 /// # Arguments
@@ -37,6 +43,12 @@ pub fn convert_toonld_to_jsonld(toon: String) -> Result<String, JsValue> {
     toon_core::toonld_to_jsonld(&toon).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
+/// Convert TOON-LD string to JSON-LD format (camelCase alias)
+#[wasm_bindgen(js_name = convertToonldToJsonld)]
+pub fn convert_toonld_to_jsonld_js(toon: String) -> Result<String, JsValue> {
+    convert_toonld_to_jsonld(toon)
+}
+
 /// Validate a TOON-LD string
 ///
 /// # Arguments
@@ -45,7 +57,7 @@ pub fn convert_toonld_to_jsonld(toon: String) -> Result<String, JsValue> {
 /// # Returns
 /// * `true` if the string is valid TOON-LD
 /// * `false` otherwise
-#[wasm_bindgen]
+#[wasm_bindgen(js_name = validateToonld)]
 pub fn validate_toonld(toon: String) -> bool {
     toon_core::toonld_to_jsonld(&toon).is_ok()
 }
@@ -58,9 +70,43 @@ pub fn validate_toonld(toon: String) -> bool {
 /// # Returns
 /// * `true` if the string is valid JSON
 /// * `false` otherwise
-#[wasm_bindgen]
+#[wasm_bindgen(js_name = validateJson)]
 pub fn validate_json(json: String) -> bool {
     serde_json::from_str::<serde_json::Value>(&json).is_ok()
+}
+
+/// Parse TOON-LD string to a JavaScript Object
+///
+/// # Arguments
+/// * `toon` - A TOON-LD formatted string
+///
+/// # Returns
+/// * JavaScript Object representing the parsed data
+#[wasm_bindgen(js_name = parseToonld)]
+pub fn parse_toonld(toon: String) -> Result<JsValue, JsValue> {
+    let parser = toon_core::ToonParser::new();
+    let value = parser
+        .parse(&toon)
+        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+    serde_wasm_bindgen::to_value(&value).map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Serialize a JavaScript Object to TOON-LD format
+///
+/// # Arguments
+/// * `data` - A JavaScript Object
+///
+/// # Returns
+/// * TOON-LD formatted string
+#[wasm_bindgen(js_name = serializeToonld)]
+pub fn serialize_to_toonld(data: JsValue) -> Result<String, JsValue> {
+    let value: serde_json::Value =
+        serde_wasm_bindgen::from_value(data).map_err(|e| JsValue::from_str(&e.to_string()))?;
+    let context = toon_core::JsonLdContext::from_value(&value);
+    let serializer = toon_core::ToonSerializer::new().with_context(context);
+    serializer
+        .serialize(&value)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
 /// Tests that use toon_core directly (work on all platforms)
