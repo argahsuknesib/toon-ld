@@ -184,8 +184,8 @@ fn cmd_convert(
             toon_core::encode(&content).context("Failed to convert JSON-LD to TOON-LD")?
         }
         (Format::ToonLd, Format::JsonLd) => {
-            let json = toon_core::decode(&content)
-                .context("Failed to convert TOON-LD to JSON-LD")?;
+            let json =
+                toon_core::decode(&content).context("Failed to convert TOON-LD to JSON-LD")?;
             if pretty {
                 let value: serde_json::Value = serde_json::from_str(&json)?;
                 serde_json::to_string_pretty(&value)?
@@ -306,16 +306,14 @@ fn cmd_stats(input: Option<PathBuf>, format: Option<Format>, show_tokens: bool) 
     // Get both representations
     let (jsonld, toonld) = match source_format {
         Format::JsonLd => {
-            let toon =
-                toon_core::encode(&content).context("Failed to convert to TOON-LD")?;
+            let toon = toon_core::encode(&content).context("Failed to convert to TOON-LD")?;
             // Normalize JSON for fair comparison
             let value: serde_json::Value = serde_json::from_str(&content)?;
             let normalized = serde_json::to_string(&value)?;
             (normalized, toon)
         }
         Format::ToonLd => {
-            let json =
-                toon_core::decode(&content).context("Failed to convert to JSON-LD")?;
+            let json = toon_core::decode(&content).context("Failed to convert to JSON-LD")?;
             let value: serde_json::Value = serde_json::from_str(&json)?;
             let normalized = serde_json::to_string(&value)?;
             (normalized, content)
@@ -425,8 +423,7 @@ fn cmd_benchmark(input: Option<PathBuf>, max_records: usize) -> Result<()> {
             generate_sample_jsonld(num_records)
         };
 
-        let toonld =
-            toon_core::encode(&jsonld).context("Failed to convert to TOON-LD")?;
+        let toonld = toon_core::encode(&jsonld).context("Failed to convert to TOON-LD")?;
 
         // Normalize JSON for fair comparison
         let value: serde_json::Value = serde_json::from_str(&jsonld)?;
