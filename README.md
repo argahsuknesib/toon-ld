@@ -163,18 +163,18 @@ json_str = toon_ld.convert_toonld_to_jsonld(toon_str)
 
 ### JavaScript
 ```javascript
-import { convertJsonldToToonld, convertToonldToJsonld, parseToonld, serializeToonld } from 'toon-ld';
+import { encode, decode, parse, stringify } from 'toon-ld';
 
 // String conversion
 const jsonLd = '{"@context": {"foaf": "http://xmlns.com/foaf/0.1/"}, "foaf:name": "Alice"}';
-const toon = convertJsonldToToonld(jsonLd);
-const json = convertToonldToJsonld(toon);
+const toon = encode(jsonLd);
+const json = decode(toon);
 
 // Object helpers
-const data = parseToonld(toon); // Returns JS Object
+const data = parse(toon); // Returns JS Object
 console.log(data['foaf:name']); // "Alice"
 
-const toonStr = serializeToonld({ "foaf:name": "Bob" }); // Takes JS Object
+const toonStr = stringify({ "foaf:name": "Bob" }); // Takes JS Object
 ```
  
 

@@ -11,21 +11,15 @@ pub fn init() {
     console_error_panic_hook::set_once();
 }
 
-/// Convert JSON-LD string to TOON-LD format
-///
-/// # Arguments
-/// * `json` - A JSON or JSON-LD formatted string
-///
-/// # Returns
-/// * TOON-LD formatted string on success
-/// * Error message on failure
 #[wasm_bindgen]
 pub fn convert_jsonld_to_toonld(json: String) -> Result<String, JsValue> {
     toon_core::jsonld_to_toonld(&json).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Convert JSON-LD string to TOON-LD format (camelCase alias)
-#[wasm_bindgen(js_name = convertJsonldToToonld)]
+/// Encode JSON-LD string to TOON-LD format
+///
+/// Alias for `convert_jsonld_to_toonld`
+#[wasm_bindgen(js_name = encode)]
 pub fn convert_jsonld_to_toonld_js(json: String) -> Result<String, JsValue> {
     convert_jsonld_to_toonld(json)
 }
@@ -43,8 +37,10 @@ pub fn convert_toonld_to_jsonld(toon: String) -> Result<String, JsValue> {
     toon_core::toonld_to_jsonld(&toon).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Convert TOON-LD string to JSON-LD format (camelCase alias)
-#[wasm_bindgen(js_name = convertToonldToJsonld)]
+/// Decode TOON-LD string to JSON-LD format
+///
+/// Alias for `convert_toonld_to_jsonld`
+#[wasm_bindgen(js_name = decode)]
 pub fn convert_toonld_to_jsonld_js(toon: String) -> Result<String, JsValue> {
     convert_toonld_to_jsonld(toon)
 }
@@ -82,7 +78,7 @@ pub fn validate_json(json: String) -> bool {
 ///
 /// # Returns
 /// * JavaScript Object representing the parsed data
-#[wasm_bindgen(js_name = parseToonld)]
+#[wasm_bindgen(js_name = parse)]
 pub fn parse_toonld(toon: String) -> Result<JsValue, JsValue> {
     let parser = toon_core::ToonParser::new();
     let value = parser
@@ -91,14 +87,14 @@ pub fn parse_toonld(toon: String) -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&value).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Serialize a JavaScript Object to TOON-LD format
+/// Stringify a JavaScript Object to TOON-LD format
 ///
 /// # Arguments
 /// * `data` - A JavaScript Object
 ///
 /// # Returns
 /// * TOON-LD formatted string
-#[wasm_bindgen(js_name = serializeToonld)]
+#[wasm_bindgen(js_name = stringify)]
 pub fn serialize_to_toonld(data: JsValue) -> Result<String, JsValue> {
     let value: serde_json::Value =
         serde_wasm_bindgen::from_value(data).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -108,7 +104,6 @@ pub fn serialize_to_toonld(data: JsValue) -> Result<String, JsValue> {
         .serialize(&value)
         .map_err(|e| JsValue::from_str(&e.to_string()))
 }
-
 /// Tests that use toon_core directly (work on all platforms)
 #[cfg(test)]
 mod tests {

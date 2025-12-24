@@ -32,7 +32,7 @@ yarn add toon-ld
 ## Quick Start
 
 ```javascript
-import { convertJsonldToToonld, convertToonldToJsonld, parseToonld, serializeToonld } from 'toon-ld';
+import { encode, decode, parse, stringify } from 'toon-ld';
 
 // 1. String Conversion
 // Convert JSON-LD to TOON-LD
@@ -42,7 +42,7 @@ const jsonLd = JSON.stringify({
   "foaf:age": 30
 });
 
-const toon = convertJsonldToToonld(jsonLd);
+const toon = encode(jsonLd);
 console.log(toon);
 // Output:
 // @context:
@@ -51,17 +51,17 @@ console.log(toon);
 // foaf:age: 30
 
 // Convert back to JSON-LD
-const backToJson = convertToonldToJsonld(toon);
+const backToJson = decode(toon);
 const parsed = JSON.parse(backToJson);
 console.log(parsed);
 
 // 2. Object Helper Functions
 // Parse directly to JS Object
-const data = parseToonld(toon);
+const data = parse(toon);
 console.log(data['foaf:name']); // "Alice"
 
 // Serialize JS Object directly to TOON-LD
-const toonStr = serializeToonld({
+const toonStr = stringify({
   "@context": {"schema": "http://schema.org/"},
   "schema:name": "Bob"
 });
@@ -97,9 +97,9 @@ Notice how object keys appear once in the header instead of repeating for each o
 
 ## API Reference
 
-### `convertJsonldToToonld(json: string): string`
+### `encode(json: string): string`
 
-Convert a JSON-LD string to TOON-LD format.
+Convert (encode) a JSON-LD string to TOON-LD format.
 
 **Parameters:**
 - `json` - A JSON or JSON-LD formatted string
@@ -110,9 +110,9 @@ Convert a JSON-LD string to TOON-LD format.
 **Throws:**
 - Error with message if the input is invalid JSON
 
-### `convertToonldToJsonld(toon: string): string`
+### `decode(toon: string): string`
 
-Convert a TOON-LD string to JSON-LD format.
+Convert (decode) a TOON-LD string to JSON-LD format.
 
 **Parameters:**
 - `toon` - A TOON-LD formatted string
@@ -123,7 +123,7 @@ Convert a TOON-LD string to JSON-LD format.
 **Throws:**
 - Error with message if the input is invalid TOON-LD
 
-### `parseToonld(toon: string): any`
+### `parse(toon: string): any`
 
 Parse a TOON-LD string directly into a JavaScript Object.
 
@@ -133,9 +133,9 @@ Parse a TOON-LD string directly into a JavaScript Object.
 **Returns:**
 - JavaScript Object representing the data
 
-### `serializeToonld(data: any): string`
+### `stringify(data: any): string`
 
-Serialize a JavaScript Object directly into a TOON-LD string.
+Stringify a JavaScript Object directly into a TOON-LD string.
 
 **Parameters:**
 - `data` - A JavaScript Object
@@ -180,14 +180,14 @@ This package includes TypeScript type definitions out of the box:
 
 ```typescript
 import { 
-  convertJsonldToToonld, 
-  convertToonldToJsonld,
+  encode, 
+  decode,
   validateJson,
   validateToonld 
 } from 'toon-ld';
 
 const jsonLd: string = '{"name": "Alice"}';
-const toon: string = convertJsonldToToonld(jsonLd);
+const toon: string = encode(jsonLd);
 const isValid: boolean = validateToonld(toon);
 ```
 
@@ -197,14 +197,14 @@ const isValid: boolean = validateToonld(toon);
 
 ```javascript
 import express from 'express';
-import { convertJsonldToToonld, convertToonldToJsonld } from 'toon-ld';
+import { encode, decode } from 'toon-ld';
 
 const app = express();
 app.use(express.text({ type: 'text/toon' }));
 
 app.post('/convert/to-toon', (req, res) => {
   try {
-    const toon = convertJsonldToToonld(req.body);
+    const toon = encode(req.body);
     res.type('text/toon').send(toon);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -213,7 +213,7 @@ app.post('/convert/to-toon', (req, res) => {
 
 app.post('/convert/to-jsonld', (req, res) => {
   try {
-    const jsonLd = convertToonldToJsonld(req.body);
+    const jsonLd = decode(req.body);
     res.json(JSON.parse(jsonLd));
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -231,7 +231,7 @@ app.post('/convert/to-jsonld', (req, res) => {
 </head>
 <body>
   <script type="module">
-    import { convertJsonldToToonld, init } from 'https://unpkg.com/toon-ld';
+    import { encode, init } from 'https://unpkg.com/toon-ld';
     
     init(); // Better error messages
     
@@ -240,7 +240,7 @@ app.post('/convert/to-jsonld', (req, res) => {
       "schema:name": "Example"
     });
     
-    const toon = convertJsonldToToonld(jsonLd);
+    const toon = encode(jsonLd);
     console.log(toon);
   </script>
 </body>
@@ -260,7 +260,7 @@ const jsonLd = JSON.stringify({
   ]
 });
 
-const toon = convertJsonldToToonld(jsonLd);
+const toon = encode(jsonLd);
 console.log(toon);
 // Output:
 // @context:
@@ -273,10 +273,10 @@ console.log(toon);
 ### Error Handling
 
 ```javascript
-import { convertToonldToJsonld } from 'toon-ld';
+import { decode } from 'toon-ld';
 
 try {
-  const result = convertToonldToJsonld("invalid: [unclosed");
+  const result = decode("invalid: [unclosed");
 } catch (error) {
   console.error("Conversion failed:", error.message);
   // Error message includes line numbers and helpful context
