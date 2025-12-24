@@ -23,14 +23,14 @@ import toon_ld
 
 # Convert JSON-LD to TOON-LD
 json_str = '{"name": "Alice", "age": 30}'
-toon_str = toon_ld.convert_jsonld_to_toonld(json_str)
+toon_str = toon_ld.encode(json_str)
 print(toon_str)
 # Output:
 # age: 30
 # name: Alice
 
 # Convert TOON-LD back to JSON-LD
-json_back = toon_ld.convert_toonld_to_jsonld(toon_str)
+json_back = toon_ld.decode(toon_str)
 print(json_back)
 ```
 
@@ -46,7 +46,7 @@ data = {
         {"id": 2, "name": "Bob"}
     ]
 }
-toon_str = toon_ld.serialize_to_toon(data)
+toon_str = toon_ld.stringify(data)
 print(toon_str)
 # Output:
 # users[2]{id,name}:
@@ -54,7 +54,7 @@ print(toon_str)
 #   2, Bob
 
 # Parse TOON-LD to Python dict
-parsed = toon_ld.parse_toon(toon_str)
+parsed = toon_ld.parse(toon_str)
 print(parsed["users"][0]["name"])  # Alice
 ```
 
@@ -64,7 +64,7 @@ print(parsed["users"][0]["name"])  # Alice
 import toon_ld
 
 # Validate TOON-LD
-if toon_ld.validate_toon("name: Alice"):
+if toon_ld.validate_toonld("name: Alice"):
     print("Valid TOON-LD!")
 
 # Validate JSON
@@ -74,9 +74,9 @@ if toon_ld.validate_json('{"name": "Alice"}'):
 
 ## API Reference
 
-### `convert_jsonld_to_toonld(json_str: str) -> str`
+### `encode(json_str: str) -> str`
 
-Convert a JSON-LD string to TOON-LD format.
+Convert (encode) a JSON-LD string to TOON-LD format.
 
 **Args:**
 - `json_str`: A JSON or JSON-LD formatted string
@@ -85,9 +85,9 @@ Convert a JSON-LD string to TOON-LD format.
 
 **Raises:** `ValueError` if the input is not valid JSON
 
-### `convert_toonld_to_jsonld(toon_str: str) -> str`
+### `decode(toon_str: str) -> str`
 
-Convert a TOON-LD string to JSON-LD format.
+Convert (decode) a TOON-LD string to JSON-LD format.
 
 **Args:**
 - `toon_str`: A TOON-LD formatted string
@@ -96,7 +96,7 @@ Convert a TOON-LD string to JSON-LD format.
 
 **Raises:** `ValueError` if the input is not valid TOON-LD
 
-### `parse_toon(toon_str: str) -> dict`
+### `parse(toon_str: str) -> dict`
 
 Parse a TOON-LD string to a Python dictionary.
 
@@ -107,7 +107,7 @@ Parse a TOON-LD string to a Python dictionary.
 
 **Raises:** `ValueError` if the input is not valid TOON-LD
 
-### `serialize_to_toon(data: Any) -> str`
+### `stringify(data: Any) -> str`
 
 Serialize a Python dictionary to TOON-LD format.
 
@@ -118,7 +118,7 @@ Serialize a Python dictionary to TOON-LD format.
 
 **Raises:** `ValueError` if the input cannot be serialized
 
-### `validate_toon(toon_str: str) -> bool`
+### `validate_toonld(toon_str: str) -> bool`
 
 Validate a TOON-LD string.
 
@@ -167,4 +167,4 @@ note: "Hello, World"
 
 ## License
 
-MIT
+MIT License - See [LICENSE](LICENSE) for details.

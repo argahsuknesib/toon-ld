@@ -1,7 +1,7 @@
 # toon-core
 
 > **DEPRECATED: Please use [`toon-ld`](https://crates.io/crates/toon-ld) instead.**
->
+> 
 > This crate is no longer maintained. All functionality has been moved to the `toon-ld` crate, which provides a better user-facing API and naming scheme.
 
 Core serialization and parsing logic for the TOON-LD (Token-Oriented Object Notation for Linked Data) format.
@@ -23,13 +23,13 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-toon-core = "0.1"
+toon-core = "0.2"
 ```
 
 ### Basic Example
 
 ```rust
-use toon_core::{jsonld_to_toon, toon_to_jsonld};
+use toon_core::{encode, decode};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Convert JSON-LD to TOON-LD
@@ -38,11 +38,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "foaf:name": "Alice"
     }"#;
     
-    let toon = jsonld_to_toon(json_ld)?;
+    let toon = encode(json_ld)?;
     println!("TOON-LD:\n{}", toon);
     
     // Convert back to JSON-LD
-    let back_to_json = toon_to_jsonld(&toon)?;
+    let back_to_json = decode(&toon)?;
     println!("JSON-LD:\n{}", back_to_json);
     
     Ok(())
@@ -54,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 TOON-LD's key feature is efficient serialization of arrays of objects:
 
 ```rust
-use toon_core::jsonld_to_toon;
+use toon_core::encode;
 
 let json_ld = r#"{
     "@context": {"foaf": "http://xmlns.com/foaf/0.1/"},
@@ -64,7 +64,7 @@ let json_ld = r#"{
     ]
 }"#;
 
-let toon = jsonld_to_toon(json_ld)?;
+let toon = encode(json_ld)?;
 // Output uses tabular format:
 // @graph[2]{@id,foaf:age,foaf:name}:
 //   ex:1, 30, Alice
@@ -75,10 +75,10 @@ let toon = jsonld_to_toon(json_ld)?;
 
 ### Main Functions
 
-- `jsonld_to_toon(json: &str) -> Result<String, ToonError>` - Convert JSON-LD to TOON-LD
-- `toon_to_jsonld(toon: &str) -> Result<String, ToonError>` - Convert TOON-LD to JSON-LD
-- `parse_toon(toon: &str) -> Result<Value, ToonError>` - Parse TOON-LD to serde_json::Value
-- `serialize_to_toon(value: &Value) -> Result<String, ToonError>` - Serialize Value to TOON-LD
+- `encode(json: &str) -> Result<String, ToonError>` - Convert (encode) JSON-LD to TOON-LD
+- `decode(toon: &str) -> Result<String, ToonError>` - Convert (decode) TOON-LD to JSON-LD
+- `ToonParser::parse(toon: &str) -> Result<Value, ToonError>` - Parse TOON-LD to serde_json::Value
+- `ToonSerializer::serialize(value: &Value) -> Result<String, ToonError>` - Serialize Value to TOON-LD
 
 ### Error Handling
 

@@ -145,11 +145,11 @@ toon-ld benchmark --max-records 10000
 
 ### Rust
 ```rust
-use toon_ld::{jsonld_to_toonld, toonld_to_jsonld};
+use toon_ld::{encode, decode};
 
 let json_ld = r#"{"@context": {"foaf": "http://xmlns.com/foaf/0.1/"}, "foaf:name": "Alice"}"#;
-let toon = jsonld_to_toonld(json_ld)?;
-let back = toonld_to_jsonld(&toon)?;
+let toon = encode(json_ld)?;
+let back = decode(&toon)?;
 ```
 
 ### Python
@@ -157,8 +157,8 @@ let back = toonld_to_jsonld(&toon)?;
 import toon_ld
 
 json_ld = '{"@context": {"foaf": "http://xmlns.com/foaf/0.1/"}, "foaf:name": "Alice"}'
-toon_str = toon_ld.convert_jsonld_to_toonld(json_ld)
-json_str = toon_ld.convert_toonld_to_jsonld(toon_str)
+toon_str = toon_ld.encode(json_ld)
+json_str = toon_ld.decode(toon_str)
 ```
 
 ### JavaScript

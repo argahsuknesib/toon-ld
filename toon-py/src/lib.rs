@@ -5,7 +5,7 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
-/// Convert JSON-LD string to TOON-LD format.
+/// Encode JSON-LD string to TOON-LD format.
 ///
 /// Args:
 ///     json_str: A JSON or JSON-LD formatted string.
@@ -19,16 +19,16 @@ use pyo3::prelude::*;
 /// Example:
 ///     >>> import toon_ld
 ///     >>> json_str = '{"name": "Alice", "age": 30}'
-///     >>> toon_str = toon_ld.convert_jsonld_to_toonld(json_str)
+///     >>> toon_str = toon_ld.encode(json_str)
 ///     >>> print(toon_str)
 ///     age: 30
 ///     name: Alice
 #[pyfunction]
-fn convert_jsonld_to_toonld(json_str: &str) -> PyResult<String> {
-    toon_core::jsonld_to_toonld(json_str).map_err(|e| PyValueError::new_err(e.to_string()))
+fn encode(json_str: &str) -> PyResult<String> {
+    toon_core::encode(json_str).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
-/// Convert TOON-LD string to JSON-LD format.
+/// Decode TOON-LD string to JSON-LD format.
 ///
 /// Args:
 ///     toon_str: A TOON-LD formatted string.
@@ -42,15 +42,15 @@ fn convert_jsonld_to_toonld(json_str: &str) -> PyResult<String> {
 /// Example:
 ///     >>> import toon_ld
 ///     >>> toon_str = "name: Alice\nage: 30"
-///     >>> json_str = toon_ld.convert_toonld_to_jsonld(toon_str)
+///     >>> json_str = toon_ld.decode(toon_str)
 ///     >>> print(json_str)
 ///     {
 ///       "age": 30,
 ///       "name": "Alice"
 ///     }
 #[pyfunction]
-fn convert_toonld_to_jsonld(toon_str: &str) -> PyResult<String> {
-    toon_core::toonld_to_jsonld(toon_str).map_err(|e| PyValueError::new_err(e.to_string()))
+fn decode(toon_str: &str) -> PyResult<String> {
+    toon_core::decode(toon_str).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
 /// Validate a TOON-LD string.
@@ -67,7 +67,7 @@ fn convert_toonld_to_jsonld(toon_str: &str) -> PyResult<String> {
 ///     True
 #[pyfunction]
 fn validate_toonld(toon_str: &str) -> bool {
-    toon_core::toonld_to_jsonld(toon_str).is_ok()
+    toon_core::decode(toon_str).is_ok()
 }
 
 /// Validate a JSON string.
@@ -102,11 +102,11 @@ fn validate_json(json_str: &str) -> bool {
 ///
 /// Example:
 ///     >>> import toon_ld
-///     >>> data = toon_ld.parse_toonld("name: Alice\nage: 30")
+///     >>> data = toon_ld.parse("name: Alice\nage: 30")
 ///     >>> data['name']
 ///     'Alice'
 #[pyfunction]
-fn parse_toonld(py: Python<'_>, toon_str: &str) -> PyResult<PyObject> {
+fn parse(py: Python<'_>, toon_str: &str) -> PyResult<PyObject> {
     let parser = toon_core::ToonParser::new();
     let value = parser
         .parse(toon_str)
@@ -129,12 +129,12 @@ fn parse_toonld(py: Python<'_>, toon_str: &str) -> PyResult<PyObject> {
 /// Example:
 ///     >>> import toon_ld
 ///     >>> data = {"name": "Alice", "age": 30}
-///     >>> toon_str = toon_ld.serialize_to_toonld(data)
+///     >>> toon_str = toon_ld.stringify(data)
 ///     >>> print(toon_str)
 ///     age: 30
 ///     name: Alice
 #[pyfunction]
-fn serialize_to_toonld(py: Python<'_>, data: PyObject) -> PyResult<String> {
+fn stringify(py: Python<'_>, data: PyObject) -> PyResult<String> {
     let value = py_to_json_value(py, &data)?;
     let context = toon_core::JsonLdContext::from_value(&value);
     let serializer = toon_core::ToonSerializer::new().with_context(context);
@@ -245,12 +245,12 @@ fn py_to_json_value(py: Python<'_>, obj: &PyObject) -> PyResult<serde_json::Valu
 /// High-performance serializer/parser for TOON-LD (Token-Oriented Object Notation for Linked Data).
 #[pymodule]
 fn toon_ld(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(convert_jsonld_to_toonld, m)?)?;
-    m.add_function(wrap_pyfunction!(convert_toonld_to_jsonld, m)?)?;
+    m.add_function(wrap_pyfunction!(encode, m)?)?;
+    m.add_function(wrap_pyfunction!(decode, m)?)?;
     m.add_function(wrap_pyfunction!(validate_toonld, m)?)?;
     m.add_function(wrap_pyfunction!(validate_json, m)?)?;
-    m.add_function(wrap_pyfunction!(parse_toonld, m)?)?;
-    m.add_function(wrap_pyfunction!(serialize_to_toonld, m)?)?;
+    m.add_function(wrap_pyfunction!(parse, m)?)?;
+    m.add_function(wrap_pyfunction!(stringify, m)?)?;
 
     // Add version info
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
@@ -263,9 +263,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_convert_jsonld_to_toonld() {
+    fn test_encode() {
         let json = r#"{"name": "Alice", "age": 30}"#;
-        let result = toon_core::jsonld_to_toonld(json);
+        let result = toon_core::encode(json);
         assert!(result.is_ok());
         let toon = result.unwrap();
         assert!(toon.contains("name: Alice"));
@@ -273,9 +273,9 @@ mod tests {
     }
 
     #[test]
-    fn test_convert_toonld_to_jsonld() {
+    fn test_decode() {
         let toon = "name: Alice\nage: 30";
-        let result = toon_core::toonld_to_jsonld(toon);
+        let result = toon_core::decode(toon);
         assert!(result.is_ok());
         let json = result.unwrap();
         assert!(json.contains("\"name\""));
@@ -297,7 +297,7 @@ mod tests {
                 {"id": 2, "name": "Bob"}
             ]
         }"#;
-        let toon = toon_core::jsonld_to_toonld(json).unwrap();
+        let toon = toon_core::encode(json).unwrap();
         assert!(toon.contains("users[2]"));
     }
 }

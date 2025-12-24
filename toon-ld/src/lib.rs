@@ -10,7 +10,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use toon_ld::{jsonld_to_toonld, toonld_to_jsonld};
+//! use toon_ld::{encode, decode};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Convert JSON-LD to TOON-LD
@@ -19,11 +19,11 @@
 //!     "foaf:name": "Alice"
 //! }"#;
 //!
-//! let toon = jsonld_to_toonld(json_ld)?;
+//! let toon = encode(json_ld)?;
 //! println!("TOON-LD:\n{}", toon);
 //!
 //! // Convert back to JSON-LD
-//! let back_to_json = toonld_to_jsonld(&toon)?;
+//! let back_to_json = decode(&toon)?;
 //! # Ok(())
 //! # }
 //! ```
@@ -33,7 +33,7 @@
 //! TOON-LD's key feature is efficient serialization of arrays of objects:
 //!
 //! ```rust
-//! use toon_ld::jsonld_to_toonld;
+//! use toon_ld::encode;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let json_ld = r#"{
@@ -44,7 +44,7 @@
 //!     ]
 //! }"#;
 //!
-//! let toon = jsonld_to_toonld(json_ld)?;
+//! let toon = encode(json_ld)?;
 //! // Output uses tabular format with shared headers:
 //! // @graph[2]{@id,foaf:age,foaf:name}:
 //! //   ex:1, 30, Alice

@@ -13,18 +13,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.2] - 2025-01-24
 
-### Changed (JavaScript/WASM)
-- **Breaking Change:** Renamed exported functions to be more concise and idiomatic:
-    - `convert_jsonld_to_toonld` → `encode`
-    - `convert_toonld_to_jsonld` → `decode`
-    - `parse_toonld` → `parse`
-    - `serialize_to_toonld` → `stringify`
-    - `validate_toonld` → `validateToonld`
-    - `validate_json` → `validateJson`
-- `encode(json)` converts JSON-LD string to TOON-LD string (compression)
-- `decode(toon)` converts TOON-LD string to JSON-LD string (decompression)
-- `parse(toon)` parses TOON-LD string to JavaScript Object
-- `stringify(obj)` serializes JavaScript Object to TOON-LD string
+### BREAKING CHANGES
+
+Global API Rename: All supported languages (Rust, Python, JavaScript/WASM) now use a consistent, concise API: `encode`, `decode`, `parse`, and `stringify`.
+
+#### JavaScript/WASM (toon-ld)
+- `convert_jsonld_to_toonld` → `encode`
+- `convert_toonld_to_jsonld` → `decode`
+- `parse_toonld` → `parse`
+- `serialize_to_toonld` → `stringify`
+- `validate_toonld` → `validateToonld`
+- `validate_json` → `validateJson`
+
+#### Python (toon-ld)
+- `convert_jsonld_to_toonld` → `encode`
+- `convert_toonld_to_jsonld` → `decode`
+- `parse_toonld` → `parse`
+- `serialize_to_toonld` → `stringify`
+
+#### Rust (toon-core / toon-ld)
+- `jsonld_to_toonld` → `encode`
+- `toonld_to_jsonld` → `decode`
+
+### Rationale
+This change standardizes the API across all platforms, using the standard compression verbs (`encode`/`decode`) for the string-to-string format conversion, and standard Object verbs (`parse`/`stringify`) for Object-to-String conversion. This aligns with standard idioms in Python (e.g. `codecs`), Rust (e.g. `encoding`), and JavaScript (e.g. `JSON`).
 
 ## [0.2.1] - 2025-01-22
 
