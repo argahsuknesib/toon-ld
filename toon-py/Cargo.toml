@@ -1,6 +1,6 @@
 [package]
 name = "toon-py"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 authors = ["Kush Bisen"]
 license = "MIT"
@@ -11,7 +11,7 @@ name = "toon_ld"
 crate-type = ["cdylib"]
 
 [dependencies]
-toon-core = { path = "../toon-core", version = "0.2.1" }
+toon-core = { path = "../toon-core", version = "0.2.2" }
 pyo3 = { version = "0.21", features = ["extension-module", "abi3-py38"] }
 serde_json = "1.0"
 

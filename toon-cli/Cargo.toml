@@ -11,8 +11,8 @@ name = "toon-ld"
 path = "src/main.rs"
 
 [dependencies]
-toon-core = { path = "../toon-core", version = "0.2.1" }
+toon-core = { path = "../toon-core", version = "0.2.2" }
 clap.workspace = true
 serde_json.workspace = true
-thiserror.workspace = true
 anyhow = "1.0"
+colored = "2.0"

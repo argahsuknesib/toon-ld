@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional JSON-LD 1.1 keyword support (planned)
 - Streaming parser support (planned)
 
+## [0.2.2] - 2025-01-24
+
+### Changed (JavaScript/WASM)
+- **Breaking Change:** Renamed exported functions to follow standard JavaScript `camelCase` conventions:
+    - `convert_jsonld_to_toonld` → `convertJsonldToToonld`
+    - `convert_toonld_to_jsonld` → `convertToonldToJsonld`
+    - `validate_toonld` → `validateToonld`
+    - `validate_json` → `validateJson`
+- Added object-based helper functions for easier integration:
+    - `parseToonld(toonString)` → Returns a JavaScript Object
+    - `serializeToonld(jsonObject)` → Returns a TOON-LD string
+
 ## [0.2.1] - 2025-01-22
 
 ### Changed

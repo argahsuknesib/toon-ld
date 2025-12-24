@@ -1,37 +1,10 @@
 {
   "name": "toon-ld",
-  "version": "0.2.1",
-  "description": "TOON-LD (Token-Oriented Object Notation for Linked Data)",
-  "main": "toon_wasm.js",
-  "types": "toon_wasm.d.ts",
-  "module": "toon_wasm.js",
-  "sideEffects": false,
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/argahsuknesib/toon-ld"
-  },
-  "keywords": [
-    "toon",
-    "json-ld",
-    "rdf",
-    "linked-data",
-    "serialization",
-    "wasm",
-    "webassembly",
-    "rust"
-  ],
-  "author": "Kush Bisen",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/argahsuknesib/toon-ld/issues"
-  },
-  "homepage": "https://github.com/argahsuknesib/toon-ld#readme",
+  "version": "0.2.2",
   "files": [
-    "toon_wasm_bg.wasm",
-    "toon_wasm_bg.wasm.d.ts",
-    "toon_wasm.js",
-    "toon_wasm.d.ts",
-    "snippets/**/*"
+    "pkg",
+    "README.md",
+    "LICENSE"
   ],
   "exports": {
     ".": {
