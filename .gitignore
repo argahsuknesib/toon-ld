@@ -57,3 +57,4 @@ htmlcov/
 # Spec directory (not ready for public review yet)
 /spec/
 /SPECIFICATION.md
+scripts/publish_all.sh
