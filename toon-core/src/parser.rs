@@ -13,19 +13,21 @@ use crate::error::{Result, ToonError};
 /// Regex for parsing tabular array headers: key[N]{field1,field2}:
 /// Supports @ prefix for JSON-LD keywords
 static TABULAR_HEADER_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r#"^(@?\w+)\[(\d+)\]\{([^}]+)\}:$"#).expect("TABULAR_HEADER_REGEX is invalid")
+    Regex::new(r#"^([^\[\]\s]+)\[(\d+)\]\{([^}]+)\}:$"#)
+        .expect("TABULAR_HEADER_REGEX is invalid")
 });
 
 /// Regex for parsing primitive array headers: key[N]:
 /// Supports @ prefix for JSON-LD keywords
 static PRIMITIVE_ARRAY_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r#"^(@?\w+)\[(\d+)\]:(.*)$"#).expect("PRIMITIVE_ARRAY_REGEX is invalid")
+    Regex::new(r#"^([^\[\]\s]+)\[(\d+)\]:(.*)$"#)
+        .expect("PRIMITIVE_ARRAY_REGEX is invalid")
 });
 
 /// Regex for parsing key-value pairs
 /// Supports @ prefix for JSON-LD keywords and prefixed URIs (e.g., foaf:name)
 static KEY_VALUE_REGEX: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r#"^(@?\w+(?::\w+)?):\s*(.*)$"#).expect("KEY_VALUE_REGEX is invalid"));
+    Lazy::new(|| Regex::new(r#"^([^\s][^:]*|[^\s]+:[^\s]*):\s*(.*)$"#).expect("KEY_VALUE_REGEX is invalid"));
 
 /// Parser state machine modes
 #[derive(Debug, Clone, PartialEq)]
@@ -447,12 +449,13 @@ impl ToonParser {
     fn parse_primitive(&self, s: &str, _line_num: usize) -> Result<Value> {
         let s = s.trim();
 
-        // Handle quoted strings
+        // Handle quoted strings using JSON's escaping rules. This preserves
+        // the distinction between strings such as "true", "null", "001",
+        // and their non-string JSON scalar counterparts.
         if s.starts_with('"') && s.ends_with('"') && s.len() >= 2 {
-            let inner = &s[1..s.len() - 1];
-            return Ok(Value::String(
-                inner.replace("\\\"", "\"").replace("\\\\", "\\"),
-            ));
+            if let Ok(Value::String(decoded)) = serde_json::from_str::<Value>(s) {
+                return Ok(Value::String(decoded));
+            }
         }
 
         // Handle null
