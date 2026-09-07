@@ -56,9 +56,9 @@
 //! ## Features
 //!
 //! - **40-60% token reduction** compared to JSON-LD
-//! - **Full JSON-LD compatibility** with round-trip conversion
+//! - **JSON-LD preservation** without implementing JSON-LD expansion/compaction itself
 //! - **Tabular arrays** for efficient serialization of uniform data
-//! - **Context support** for URI compaction
+//! - **Context preservation** for JSON-LD `@context` values
 //! - **Value nodes** with language tags and datatypes
 //! - **Optimized parsing** with automatic tabular array detection
 
