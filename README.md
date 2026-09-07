@@ -21,8 +21,8 @@ It works by extending standard TOON syntax with Linked Data semantics, meaning *
 - **Pure TOON Extension**: Every TOON-LD document is valid TOON (like JSON-LD extends JSON)
 - **Tabular Arrays**: Serialize arrays of objects as CSV-like rows with shared headers
 - **40-60% Token Reduction**: Fewer tokens means lower costs and more data in context
-- **Full JSON-LD Compatibility**: Round-trip conversion without data loss
-- **All JSON-LD 1.1 Keywords**: Complete support for `@context`, `@graph`, `@id`, `@type`, value nodes, etc.
+- **JSON-LD Preservation**: Preserves JSON-LD structures without implementing JSON-LD expansion/compaction itself
+- **JSON-LD 1.1 Structures**: Preserves `@context`, `@graph`, `@id`, `@type`, value nodes, lists, and other JSON-LD structures
 - **Cross-Platform**: Rust, WebAssembly (npm), and Python (PyPI) implementations
 - **High Performance**: Optimized serialization with automatic tabular array detection
 
@@ -214,8 +214,8 @@ dc:titles[2]{@value,@language}:
   Hello,en
 ```
 
-### Context Support
-Automatic URI compaction using `@context`:
+### Context Preservation
+TOON-LD preserves `@context` as data. Standards-compliant JSON-LD expansion or compaction should be performed by a dedicated JSON-LD processor before or after TOON-LD conversion:
 ```
 @context:
   foaf: http://xmlns.com/foaf/0.1/
