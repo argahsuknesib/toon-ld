@@ -410,7 +410,18 @@ impl ToonParser {
         let mut values = Vec::new();
         let mut current = String::new();
         let mut in_quotes = false;
+        let mut was_quoted = false;
         let mut chars = line.chars().peekable();
+
+        let push_value =
+            |values: &mut Vec<Value>, current: &str, quoted: bool| -> Result<()> {
+                if quoted {
+                    values.push(Value::String(current.to_string()));
+                } else {
+                    values.push(self.parse_primitive(current.trim(), line_num)?);
+                }
+                Ok(())
+            };
 
         while let Some(c) = chars.next() {
             if in_quotes {
@@ -423,7 +434,8 @@ impl ToonParser {
                         in_quotes = false;
                     }
                 } else if c == '\\' {
-                    // Handle backslash escapes
+                    // Handle JSON-style backslash escapes emitted by the
+                    // serializer for quoted scalar strings.
                     if let Some(next) = chars.next() {
                         match next {
                             '"' => current.push('"'),
@@ -442,17 +454,19 @@ impl ToonParser {
                 }
             } else if c == '"' {
                 in_quotes = true;
+                was_quoted = true;
             } else if c == ',' {
-                values.push(self.parse_primitive(current.trim(), line_num)?);
+                push_value(&mut values, &current, was_quoted)?;
                 current.clear();
+                was_quoted = false;
             } else {
                 current.push(c);
             }
         }
 
-        // Don't forget the last value
-        if !current.is_empty() || !values.is_empty() {
-            values.push(self.parse_primitive(current.trim(), line_num)?);
+        // Don't forget the last value.
+        if !current.is_empty() || !values.is_empty() || was_quoted {
+            push_value(&mut values, &current, was_quoted)?;
         }
 
         Ok(values)
