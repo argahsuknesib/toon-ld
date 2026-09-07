@@ -346,10 +346,23 @@ impl ToonSerializer {
                     self.serialize_value(value, depth + 1, output)?;
                 }
             }
-            // @context gets special nested formatting
-            JSONLD_CONTEXT => {
-                self.serialize_context(value, depth, output)?;
-            }
+            // @context is serialized structurally like any other JSON value.
+            // TOON-LD must preserve the context representation; JSON-LD context
+            // processing/compaction belongs to a conforming JSON-LD processor.
+            JSONLD_CONTEXT => match value {
+                Value::Array(arr) => {
+                    self.serialize_keyed_array(JSONLD_CONTEXT, arr, depth, output)?;
+                }
+                Value::Object(ctx) => {
+                    output.push_str(&format!("{}{}:\n", indent, JSONLD_CONTEXT));
+                    self.serialize_object(ctx, depth + 1, output)?;
+                }
+                _ => {
+                    output.push_str(&format!("{}{}: ", indent, JSONLD_CONTEXT));
+                    self.serialize_value(value, depth, output)?;
+                    output.push('\n');
+                }
+            },
             // @base and @vocab are simple string values
             JSONLD_BASE | JSONLD_VOCAB => {
                 output.push_str(&format!("{}{}: ", indent, display_key));
@@ -625,6 +638,16 @@ impl ToonSerializer {
         for item in arr {
             match item {
                 Value::Object(obj) => {
+                    // Nested arrays/objects cannot be represented as scalar CSV
+                    // cells without changing their JSON type. Fall back to the
+                    // indented array representation for those shapes.
+                    if obj
+                        .values()
+                        .any(|value| matches!(value, Value::Array(_) | Value::Object(_)))
+                    {
+                        return None;
+                    }
+
                     for key in obj.keys() {
                         all_keys.insert(key.clone());
                     }
@@ -744,13 +767,24 @@ impl ToonSerializer {
         }
     }
 
-    /// Quote a string if it contains special characters.
+    /// Quote a string whenever its unquoted form would be parsed as a
+    /// different JSON scalar or would be unsafe in TOON syntax.
     fn quote_if_needed(&self, s: &str) -> String {
-        if s.is_empty() {
-            return "\"\"".to_string();
-        }
-        if NEEDS_QUOTE_REGEX.is_match(s) {
-            format!("\"{}\"", s.replace('"', "\\\""))
+        let looks_like_non_string_scalar = matches!(s, "null" | "true" | "false")
+            || s.parse::<i64>().is_ok()
+            || s.parse::<f64>().is_ok();
+
+        let requires_quoting = s.is_empty()
+            || NEEDS_QUOTE_REGEX.is_match(s)
+            || looks_like_non_string_scalar
+            || s.contains('"')
+            || s.contains('\\')
+            || s.chars().any(char::is_control);
+
+        if requires_quoting {
+            // JSON string escaping is a strict subset we can decode
+            // deterministically on the parser side.
+            serde_json::to_string(s).unwrap_or_else(|_| "\"\"".to_string())
         } else {
             s.to_string()
         }
@@ -796,35 +830,32 @@ impl ToonSerializer {
             .join("|")
     }
 
-    /// Partition array entities by their shape signature.
-    /// Returns a Vec of (signature, fields, entities) tuples.
+    /// Partition array entities into contiguous runs of the same shape.
+    ///
+    /// Keeping partitions contiguous preserves the original JSON array order.
+    /// This is required for JSON-LD constructs such as `@list`, where order
+    /// contributes directly to RDF semantics.
     fn partition_by_shape<'a>(
         &self,
         arr: &'a [Value],
     ) -> Vec<(String, Vec<String>, Vec<&'a Value>)> {
-        use std::collections::HashMap;
+        let mut partitions: Vec<(String, Vec<String>, Vec<&Value>)> = Vec::new();
 
-        let mut shape_map: HashMap<String, Vec<&Value>> = HashMap::new();
-
-        // Group entities by signature
         for item in arr {
             if let Value::Object(obj) = item {
                 let sig = self.entity_signature(obj);
-                shape_map.entry(sig).or_default().push(item);
+
+                if let Some((last_sig, _, entities)) = partitions.last_mut() {
+                    if *last_sig == sig {
+                        entities.push(item);
+                        continue;
+                    }
+                }
+
+                let fields: Vec<String> = sig.split('|').map(String::from).collect();
+                partitions.push((sig, fields, vec![item]));
             }
         }
-
-        // Convert to sorted output format
-        let mut partitions: Vec<(String, Vec<String>, Vec<&Value>)> = shape_map
-            .into_iter()
-            .map(|(sig, entities)| {
-                let fields: Vec<String> = sig.split('|').map(String::from).collect();
-                (sig, fields, entities)
-            })
-            .collect();
-
-        // Sort by entity count (largest groups first) for better readability
-        partitions.sort_by(|a, b| b.2.len().cmp(&a.2.len()));
 
         partitions
     }
