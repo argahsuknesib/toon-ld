@@ -286,19 +286,13 @@ impl ToonParser {
                     let values = self.parse_csv_values(inline_values, i + 1)?;
                     obj.insert(key.to_string(), Value::Array(values));
                 } else if count > 0 {
-                    // Multi-line primitive array
+                    // Multi-line array. Elements may be primitives ("- value")
+                    // or nested objects represented by a bare "-" followed by
+                    // an indented object block.
                     let mut arr = Vec::with_capacity(count);
                     for j in 0..count {
                         i += 1;
-                        if i < lines.len() {
-                            let val_line = lines[i].trim();
-                            let parsed = if let Some(stripped) = val_line.strip_prefix("- ") {
-                                self.parse_primitive(stripped, i + 1)?
-                            } else {
-                                self.parse_primitive(val_line, i + 1)?
-                            };
-                            arr.push(parsed);
-                        } else {
+                        if i >= lines.len() {
                             return Err(ToonError::parse_error(
                                 i + 1,
                                 format!(
@@ -306,6 +300,25 @@ impl ToonParser {
                                     count - j
                                 ),
                             ));
+                        }
+
+                        let item_line = lines[i];
+                        let item_trimmed = item_line.trim();
+
+                        if item_trimmed == "-" {
+                            let item_indent = self.get_indent(item_line);
+                            let (nested, consumed) =
+                                self.parse_lines(lines, i + 1, item_indent + 2)?;
+                            arr.push(nested);
+
+                            // parse_lines returns the index of the first
+                            // unconsumed line. The loop increments i before
+                            // reading the next array element.
+                            i = consumed.saturating_sub(1);
+                        } else if let Some(stripped) = item_trimmed.strip_prefix("- ") {
+                            arr.push(self.parse_primitive(stripped, i + 1)?);
+                        } else {
+                            arr.push(self.parse_primitive(item_trimmed, i + 1)?);
                         }
                     }
                     obj.insert(key.to_string(), Value::Array(arr));
