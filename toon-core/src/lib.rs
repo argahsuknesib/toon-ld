@@ -59,9 +59,12 @@ pub use serializer::ToonSerializer;
 /// Encode JSON-LD string to TOON-LD format
 pub fn encode(json: &str) -> Result<String> {
     let value: serde_json::Value = serde_json::from_str(json).map_err(ToonError::from)?;
-    let context = JsonLdContext::from_value(&value);
-    let serializer = ToonSerializer::new().with_context(context);
-    serializer.serialize(&value)
+
+    // Preserve mode: TOON-LD serializes the JSON-LD representation without
+    // performing JSON-LD expansion or compaction itself. Applications that
+    // require expansion/compaction should use a conforming JSON-LD processor
+    // before or after TOON-LD conversion.
+    ToonSerializer::new().serialize(&value)
 }
 
 /// Decode TOON-LD string to JSON-LD format
@@ -143,6 +146,118 @@ mod tests {
 
         assert_eq!(back.get("count").unwrap(), 2);
         assert_eq!(back.get("active").unwrap(), true);
+    }
+
+    #[test]
+    fn test_roundtrip_preserves_string_like_scalars() {
+        let original: Value = serde_json::json!({
+            "null_string": "null",
+            "true_string": "true",
+            "false_string": "false",
+            "integer_string": "42",
+            "float_string": "3.14",
+            "leading_zero_string": "001",
+            "negative_string": "-7",
+            "actual_null": null,
+            "actual_bool": true,
+            "actual_number": 42
+        });
+
+        let toon = encode(&original.to_string()).unwrap();
+        let back_json = decode(&toon).unwrap();
+        let back: Value = serde_json::from_str(&back_json).unwrap();
+
+        assert_eq!(back, original);
+    }
+
+    #[test]
+    fn test_roundtrip_preserves_nested_object_array_values() {
+        let original: Value = serde_json::json!({
+            "@graph": [
+                {
+                    "@id": "ex:alice",
+                    "ex:knows": {"@id": "ex:bob"}
+                },
+                {
+                    "@id": "ex:bob",
+                    "ex:tags": ["friend", "researcher"]
+                }
+            ]
+        });
+
+        let toon = encode(&original.to_string()).unwrap();
+        let back_json = decode(&toon).unwrap();
+        let back: Value = serde_json::from_str(&back_json).unwrap();
+
+        assert_eq!(back, original);
+    }
+
+    #[test]
+    fn test_roundtrip_preserves_shape_partition_array_order() {
+        let original: Value = serde_json::json!({
+            "items": [
+                {"a": 1},
+                {"b": 2, "c": 3},
+                {"a": 4}
+            ]
+        });
+
+        let toon = encode(&original.to_string()).unwrap();
+        let back_json = decode(&toon).unwrap();
+        let back: Value = serde_json::from_str(&back_json).unwrap();
+
+        assert_eq!(back, original);
+    }
+
+    #[test]
+    fn test_roundtrip_preserves_jsonld_list_order() {
+        let original: Value = serde_json::json!({
+            "@list": [
+                {"a": 1},
+                {"b": 2, "c": 3},
+                {"a": 4}
+            ]
+        });
+
+        let toon = encode(&original.to_string()).unwrap();
+        let back_json = decode(&toon).unwrap();
+        let back: Value = serde_json::from_str(&back_json).unwrap();
+
+        assert_eq!(back, original);
+    }
+
+    #[test]
+    fn test_roundtrip_preserves_context_structure() {
+        let original: Value = serde_json::json!({
+            "@context": {
+                "homepage": {
+                    "@id": "http://schema.org/url",
+                    "@type": "@id"
+                },
+                "schema": "http://schema.org/"
+            },
+            "homepage": "https://example.org/"
+        });
+
+        let toon = encode(&original.to_string()).unwrap();
+        let back_json = decode(&toon).unwrap();
+        let back: Value = serde_json::from_str(&back_json).unwrap();
+
+        assert_eq!(back, original);
+    }
+
+    #[test]
+    fn test_roundtrip_preserves_prefixed_hyphenated_keys() {
+        let original: Value = serde_json::json!({
+            "schema:date-published": "2026-09-07",
+            "ex:some.property": "value"
+        });
+
+        let toon = encode(&original.to_string()).unwrap();
+        let back_json = decode(&toon).unwrap();
+        let back: Value = serde_json::from_str(&back_json).unwrap();
+
+        assert_eq!(back, original);
     }
 
     #[test]
